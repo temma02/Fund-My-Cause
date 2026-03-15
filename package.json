@@ -1,0 +1,15 @@
+{
+  "name": "fund-my-cause",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/interface",
+    "build": "npm run build --workspace=apps/interface",
+    "lint": "npm run lint --workspace=apps/interface",
+    "contracts:build": "cargo build --release --target wasm32-unknown-unknown --manifest-path contracts/crowdfund/Cargo.toml",
+    "contracts:test": "cargo test --workspace"
+  }
+}
