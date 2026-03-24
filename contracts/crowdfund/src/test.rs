@@ -84,3 +84,45 @@ fn test_cancel_already_cancelled() {
     assert_eq!(stored_links.len(), 1);
     assert_eq!(stored_links.get(0).unwrap(), String::from_str(&env, "https://example.com"));
 }
+
+#[test]
+fn test_update_metadata() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let creator = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_id = env.register_stellar_asset_contract(token_admin);
+    let contract_id = env.register_contract(None, CrowdfundContract);
+    let client = CrowdfundContractClient::new(&env, &contract_id);
+
+    client.initialize(&creator, &token_id, &1000, &1000, &10, &String::from_str(&env, "Old Title"), &String::from_str(&env, "Old Description"), &None, &None);
+
+    let mut new_links = Vec::new(&env);
+    new_links.push_back(String::from_str(&env, "https://new.com"));
+
+    client.update_metadata(
+        &Some(String::from_str(&env, "New Title")),
+        &Some(String::from_str(&env, "New Description")),
+        &Some(new_links),
+    );
+
+    // Verify event
+    let events = env.events().all();
+    let topics: Vec<Val> = ("campaign", "metadata_updated").into_val(&env);
+    if !events.iter().any(|e| e.1 == topics) {
+        panic!("metadata_updated event not found. Total events: {}", events.len());
+    }
+
+    assert_eq!(client.title(), String::from_str(&env, "New Title"));
+    assert_eq!(client.description(), String::from_str(&env, "New Description"));
+    
+    let stored_links = client.social_links();
+    assert_eq!(stored_links.len(), 1);
+    assert_eq!(stored_links.get(0).unwrap(), String::from_str(&env, "https://new.com"));
+
+    // Cancel and ensure update fails
+    client.cancel_campaign();
+    let result = client.try_update_metadata(&None, &None, &None);
+    assert_eq!(result.err(), Some(Ok(ContractError::NotActive)));
+}

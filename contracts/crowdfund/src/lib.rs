@@ -217,6 +217,35 @@ impl CrowdfundContract {
         Ok(())
     }
 
+    /// Update campaign metadata.
+    pub fn update_metadata(
+        env: Env,
+        title: Option<String>,
+        description: Option<String>,
+        social_links: Option<Vec<String>>,
+    ) -> Result<(), ContractError> {
+        let status: Status = env.storage().instance().get(&DataKey::Status).unwrap();
+        if status != Status::Active {
+            return Err(ContractError::NotActive);
+        }
+
+        let creator: Address = env.storage().instance().get(&DataKey::Creator).unwrap();
+        creator.require_auth();
+
+        if let Some(t) = title {
+            env.storage().instance().set(&DataKey::Title, &t);
+        }
+        if let Some(d) = description {
+            env.storage().instance().set(&DataKey::Description, &d);
+        }
+        if let Some(l) = social_links {
+            env.storage().instance().set(&DataKey::SocialLinks, &l);
+        }
+
+        env.events().publish(("campaign", "metadata_updated"), ());
+        Ok(())
+    }
+
     /// Cancel a campaign before the deadline.
     pub fn cancel_campaign(env: Env) -> Result<(), ContractError> {
         let status: Status = env.storage().instance().get(&DataKey::Status).unwrap();

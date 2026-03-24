@@ -51,6 +51,7 @@ The Soroban contract lives in `contracts/crowdfund/src/lib.rs` and exposes the f
 |---|---|
 | `initialize(creator, token, goal, deadline, min_contribution, title, description, social_links, platform_config)` | Create a new campaign |
 | `contribute(contributor, amount)` | Pledge tokens before the deadline |
+| `update_metadata(title, description, social_links)` | Update campaign metadata if status is Active |
 | `withdraw()` | Creator claims funds after a successful campaign |
 | `refund_single(contributor)` | Contributor claims their own refund if goal not met |
 | `get_stats()` | Returns `CampaignStats` (total raised, progress bps, contributor count, etc.) |
