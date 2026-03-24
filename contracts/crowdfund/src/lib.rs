@@ -46,7 +46,6 @@ pub enum DataKey {
     Deadline,
     TotalRaised,
     Contribution(Address),
-    Contributors,
     Status,
     MinContribution,
     Admin,
@@ -54,6 +53,9 @@ pub enum DataKey {
     Description,
     SocialLinks,
     PlatformConfig,
+    ContributorPresence(Address),
+    ContributorCount,
+    LargestContribution,
 }
 
 // ── Contract Errors ───────────────────────────────────────────────────────────
@@ -119,9 +121,8 @@ impl CrowdfundContract {
 
         env.storage().instance().set(&DataKey::TotalRaised, &0i128);
         env.storage().instance().set(&DataKey::Status, &Status::Active);
-
-        let empty: Vec<Address> = Vec::new(&env);
-        env.storage().persistent().set(&DataKey::Contributors, &empty);
+        env.storage().instance().set(&DataKey::ContributorCount, &0u32);
+        env.storage().instance().set(&DataKey::LargestContribution, &0i128);
 
         Ok(())
     }
@@ -159,15 +160,18 @@ impl CrowdfundContract {
         let new_total = total.checked_add(amount).ok_or(ContractError::Overflow)?;
         env.storage().instance().set(&DataKey::TotalRaised, &new_total);
 
-        let mut contributors: Vec<Address> = env
-            .storage()
-            .persistent()
-            .get(&DataKey::Contributors)
-            .unwrap_or_else(|| Vec::new(&env));
-        if !contributors.contains(&contributor) {
-            contributors.push_back(contributor.clone());
-            env.storage().persistent().set(&DataKey::Contributors, &contributors);
-            env.storage().persistent().extend_ttl(&DataKey::Contributors, 100, 100);
+        let presence_key = DataKey::ContributorPresence(contributor.clone());
+        let is_present: bool = env.storage().persistent().get(&presence_key).unwrap_or(false);
+        if !is_present {
+            env.storage().persistent().set(&presence_key, &true);
+            env.storage().persistent().extend_ttl(&presence_key, 100, 100);
+            let count: u32 = env.storage().instance().get(&DataKey::ContributorCount).unwrap();
+            env.storage().instance().set(&DataKey::ContributorCount, &(count + 1));
+        }
+
+        let largest: i128 = env.storage().instance().get(&DataKey::LargestContribution).unwrap();
+        if new_amount > largest {
+            env.storage().instance().set(&DataKey::LargestContribution, &new_amount);
         }
 
         env.events().publish(("campaign", "contributed"), (contributor, amount));
@@ -342,11 +346,8 @@ impl CrowdfundContract {
     pub fn get_stats(env: Env) -> CampaignStats {
         let total_raised: i128 = env.storage().instance().get(&DataKey::TotalRaised).unwrap_or(0);
         let goal: i128 = env.storage().instance().get(&DataKey::Goal).unwrap();
-        let contributors: Vec<Address> = env
-            .storage()
-            .persistent()
-            .get(&DataKey::Contributors)
-            .unwrap_or_else(|| Vec::new(&env));
+        let contributor_count: u32 = env.storage().instance().get(&DataKey::ContributorCount).unwrap_or(0);
+        let largest_contribution: i128 = env.storage().instance().get(&DataKey::LargestContribution).unwrap_or(0);
 
         let progress_bps = if goal > 0 {
             let raw = (total_raised * 10_000) / goal;
@@ -355,23 +356,10 @@ impl CrowdfundContract {
             0
         };
 
-        let contributor_count = contributors.len();
-        let (average_contribution, largest_contribution) = if contributor_count == 0 {
-            (0, 0)
+        let average_contribution = if contributor_count == 0 {
+            0
         } else {
-            let avg = total_raised / contributor_count as i128;
-            let mut largest = 0i128;
-            for c in contributors.iter() {
-                let amt: i128 = env
-                    .storage()
-                    .persistent()
-                    .get(&DataKey::Contribution(c))
-                    .unwrap_or(0);
-                if amt > largest {
-                    largest = amt;
-                }
-            }
-            (avg, largest)
+            total_raised / contributor_count as i128
         };
 
         CampaignStats {
