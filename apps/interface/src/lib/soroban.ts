@@ -74,9 +74,14 @@ export interface CampaignData {
   contractId: string;
   title: string;
   description: string;
-  raised: number;   // stroops → display as XLM (/1e7)
+  raised: number;          // stroops → display as XLM (/1e7)
   goal: number;
-  deadline: string; // ISO string derived from ledger timestamp
+  deadline: string;        // ISO string derived from ledger timestamp
+  creator: string;
+  socialLinks: string[];
+  contributorCount: number;
+  averageContribution: number;
+  status: "Active" | "Successful" | "Refunded" | "Cancelled";
 }
 
 /**
@@ -84,22 +89,31 @@ export interface CampaignData {
  * Uses `getContractData` for simple scalar reads to avoid needing a full tx.
  */
 export async function fetchCampaign(contractId: string): Promise<CampaignData> {
-  // Each DataKey maps to a ledger entry key. We read them individually via
-  // getLedgerEntries (available in Soroban RPC >= 0.0.27).
-  const [titleXdr, descXdr, statsXdr] = await Promise.all([
-    readInstanceEntry(contractId, "Title"),
-    readInstanceEntry(contractId, "Description"),
-    readInstanceEntry(contractId, "TotalRaised"),
-  ]);
+  const [titleXdr, descXdr, raisedXdr, goalXdr, creatorXdr, socialXdr, statsXdr] =
+    await Promise.all([
+      readInstanceEntry(contractId, "Title"),
+      readInstanceEntry(contractId, "Description"),
+      readInstanceEntry(contractId, "TotalRaised"),
+      readInstanceEntry(contractId, "Goal"),
+      readInstanceEntry(contractId, "Creator"),
+      readInstanceEntry(contractId, "SocialLinks").catch(() => null),
+      readInstanceEntry(contractId, "Stats").catch(() => null),
+    ]);
+
+  const stats = statsXdr ? decodeStatsXdr(statsXdr) : null;
 
   return {
     contractId,
     title: decodeStringXdr(titleXdr),
     description: decodeStringXdr(descXdr),
-    raised: decodeI128Xdr(statsXdr) / 1e7,
-    // goal and deadline require additional reads — extend as needed
-    goal: 0,
-    deadline: new Date(Date.now() + 30 * 86400_000).toISOString(),
+    raised: decodeI128Xdr(raisedXdr) / 1e7,
+    goal: decodeI128Xdr(goalXdr) / 1e7,
+    deadline: new Date(Date.now() + 30 * 86400_000).toISOString(), // replace with Deadline entry
+    creator: decodeAddressXdr(creatorXdr),
+    socialLinks: socialXdr ? decodeStringVecXdr(socialXdr) : [],
+    contributorCount: stats?.contributorCount ?? 0,
+    averageContribution: stats?.averageContribution ?? 0,
+    status: "Active",
   };
 }
 
@@ -132,6 +146,27 @@ function decodeStringXdr(_xdr: string): string {
 
 function decodeI128Xdr(_xdr: string): number {
   throw new Error("decodeI128Xdr: integrate stellar-sdk xdr module");
+}
+
+function decodeAddressXdr(_xdr: string): string {
+  throw new Error("decodeAddressXdr: integrate stellar-sdk xdr module");
+}
+
+function decodeStringVecXdr(_xdr: string): string[] {
+  throw new Error("decodeStringVecXdr: integrate stellar-sdk xdr module");
+}
+
+function decodeStatsXdr(_xdr: string): { contributorCount: number; averageContribution: number } {
+  throw new Error("decodeStatsXdr: integrate stellar-sdk xdr module");
+}
+
+/** Fetch the contribution amount for a specific address on a contract. */
+export async function fetchContribution(
+  contractId: string,
+  address: string
+): Promise<number> {
+  const xdr = await readInstanceEntry(contractId, `Contribution:${address}`).catch(() => null);
+  return xdr ? decodeI128Xdr(xdr) / 1e7 : 0;
 }
 
 /**
