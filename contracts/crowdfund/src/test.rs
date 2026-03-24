@@ -126,3 +126,38 @@ fn test_update_metadata() {
     let result = client.try_update_metadata(&None, &None, &None);
     assert_eq!(result.err(), Some(Ok(ContractError::NotActive)));
 }
+
+#[test]
+fn test_is_contributor() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let creator = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_id = env.register_stellar_asset_contract(token_admin);
+    let token_admin_client = token::StellarAssetClient::new(&env, &token_id);
+
+    let contract_id = env.register_contract(None, CrowdfundContract);
+    let client = CrowdfundContractClient::new(&env, &contract_id);
+
+    let deadline = 1000;
+    let goal = 10000;
+    let min_contribution = 100;
+
+    client.initialize(&creator, &token_id, &goal, &deadline, &min_contribution, &String::from_str(&env, "My Title"), &String::from_str(&env, "My Description"), &None, &None);
+
+    // Test non-contributor
+    let non_contributor = Address::generate(&env);
+    assert_eq!(client.is_contributor(&non_contributor), false);
+
+    // Test contributor
+    let contributor = Address::generate(&env);
+    token_admin_client.mint(&contributor, &500);
+    client.contribute(&contributor, &500);
+    assert_eq!(client.is_contributor(&contributor), true);
+
+    // Test after refund
+    client.cancel_campaign();
+    client.refund_single(&contributor);
+    assert_eq!(client.is_contributor(&contributor), false);
+}
