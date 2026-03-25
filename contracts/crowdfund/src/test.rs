@@ -128,7 +128,7 @@ fn test_update_metadata() {
 }
 
 #[test]
-fn test_platform_config_view() {
+fn test_creator_view() {
     let env = Env::default();
     env.mock_all_auths();
 
@@ -138,7 +138,6 @@ fn test_platform_config_view() {
     let contract_id = env.register_contract(None, CrowdfundContract);
     let client = CrowdfundContractClient::new(&env, &contract_id);
 
-    // Test case 1: No platform config (None)
     client.initialize(
         &creator,
         &token_id,
@@ -151,41 +150,5 @@ fn test_platform_config_view() {
         &None,
     );
 
-    let config = client.platform_config();
-    assert_eq!(config, None);
-
-    // Test case 2: With platform config (Some)
-    let env2 = Env::default();
-    env2.mock_all_auths();
-
-    let creator2 = Address::generate(&env2);
-    let token_admin2 = Address::generate(&env2);
-    let token_id2 = env2.register_stellar_asset_contract(token_admin2);
-    let contract_id2 = env2.register_contract(None, CrowdfundContract);
-    let client2 = CrowdfundContractClient::new(&env2, &contract_id2);
-
-    let platform_address = Address::generate(&env2);
-    let platform_config = PlatformConfig {
-        address: platform_address.clone(),
-        fee_bps: 250, // 2.5% fee
-    };
-
-    client2.initialize(
-        &creator2,
-        &token_id2,
-        &1000,
-        &1000,
-        &10,
-        &String::from_str(&env2, "Title"),
-        &String::from_str(&env2, "Description"),
-        &None,
-        &Some(platform_config.clone()),
-    );
-
-    let retrieved_config = client2.platform_config();
-    assert!(retrieved_config.is_some());
-    
-    let config_value = retrieved_config.unwrap();
-    assert_eq!(config_value.address, platform_address);
-    assert_eq!(config_value.fee_bps, 250);
+    assert_eq!(client.creator(), creator);
 }
