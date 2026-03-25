@@ -235,11 +235,7 @@
           "contract_data": {
             "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
             "key": {
-              "vec": [
-                {
-                  "symbol": "Contributors"
-                }
-              ]
+              "symbol": "CONTRIBS"
             },
             "durability": "persistent"
           }
@@ -252,11 +248,7 @@
                 "ext": "v0",
                 "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
                 "key": {
-                  "vec": [
-                    {
-                      "symbol": "Contributors"
-                    }
-                  ]
+                  "symbol": "CONTRIBS"
                 },
                 "durability": "persistent",
                 "val": {
@@ -294,11 +286,7 @@
                     "storage": [
                       {
                         "key": {
-                          "vec": [
-                            {
-                              "symbol": "Creator"
-                            }
-                          ]
+                          "symbol": "CREATOR"
                         },
                         "val": {
                           "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
@@ -306,11 +294,7 @@
                       },
                       {
                         "key": {
-                          "vec": [
-                            {
-                              "symbol": "Deadline"
-                            }
-                          ]
+                          "symbol": "DEADLINE"
                         },
                         "val": {
                           "u64": 1000
@@ -318,11 +302,7 @@
                       },
                       {
                         "key": {
-                          "vec": [
-                            {
-                              "symbol": "Description"
-                            }
-                          ]
+                          "symbol": "DESC"
                         },
                         "val": {
                           "string": "My Description"
@@ -330,11 +310,7 @@
                       },
                       {
                         "key": {
-                          "vec": [
-                            {
-                              "symbol": "Goal"
-                            }
-                          ]
+                          "symbol": "GOAL"
                         },
                         "val": {
                           "i128": {
@@ -345,11 +321,7 @@
                       },
                       {
                         "key": {
-                          "vec": [
-                            {
-                              "symbol": "MinContribution"
-                            }
-                          ]
+                          "symbol": "MIN"
                         },
                         "val": {
                           "i128": {
@@ -360,11 +332,7 @@
                       },
                       {
                         "key": {
-                          "vec": [
-                            {
-                              "symbol": "SocialLinks"
-                            }
-                          ]
+                          "symbol": "SOCIAL"
                         },
                         "val": {
                           "vec": [
@@ -376,11 +344,7 @@
                       },
                       {
                         "key": {
-                          "vec": [
-                            {
-                              "symbol": "Status"
-                            }
-                          ]
+                          "symbol": "STATUS"
                         },
                         "val": {
                           "vec": [
@@ -392,11 +356,7 @@
                       },
                       {
                         "key": {
-                          "vec": [
-                            {
-                              "symbol": "Title"
-                            }
-                          ]
+                          "symbol": "TITLE"
                         },
                         "val": {
                           "string": "My Title"
@@ -404,11 +364,7 @@
                       },
                       {
                         "key": {
-                          "vec": [
-                            {
-                              "symbol": "Token"
-                            }
-                          ]
+                          "symbol": "TOKEN"
                         },
                         "val": {
                           "address": "CBUSYNQKASUYFWYC3M2GUEDMX4AIVWPALDBYJPNK6554BREHTGZ2IUNF"
@@ -416,11 +372,7 @@
                       },
                       {
                         "key": {
-                          "vec": [
-                            {
-                              "symbol": "TotalRaised"
-                            }
-                          ]
+                          "symbol": "TOTAL"
                         },
                         "val": {
                           "i128": {
