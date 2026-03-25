@@ -276,6 +276,19 @@ impl CrowdfundContract {
             env.storage().persistent().extend_ttl(&KEY_CONTRIBS, 100, 100);
         }
 
+        // Extend instance storage TTL to keep contract alive.
+        // Instance storage includes: Creator, Token, Goal, Deadline, MinContribution,
+        // Title, Description, SocialLinks, Status, TotalRaised, PlatformConfig.
+        // 
+        // TTL Strategy:
+        // - Threshold: 17280 ledgers (~1 day at 5s/ledger) - extend when TTL drops below this
+        // - Extension: 518400 ledgers (~30 days at 5s/ledger) - extend to this duration
+        // 
+        // This ensures the contract remains accessible throughout typical campaign durations
+        // while balancing storage costs. The threshold triggers extension early enough to
+        // prevent archival during active campaigns.
+        env.storage().instance().extend_ttl(17280, 518400);
+
         env.events().publish(("campaign", "contributed"), (contributor, amount));
         Ok(())
     }
@@ -317,6 +330,15 @@ impl CrowdfundContract {
         };
 
         token_client.transfer(&env.current_contract_address(), &creator, &payout);
+        env.storage().instance().set(&DataKey::TotalRaised, &0i128);
+        env.storage().instance().set(&DataKey::Status, &Status::Successful);
+
+        // Extend instance storage TTL after successful withdrawal.
+        // This ensures contract metadata remains accessible for historical reference
+        // and potential future interactions (e.g., viewing campaign results).
+        // Uses same TTL strategy as contribute: threshold 17280, extension 518400 ledgers.
+        env.storage().instance().extend_ttl(17280, 518400);
+
         env.storage().instance().set(&KEY_TOTAL, &0i128);
         env.storage().instance().set(&KEY_STATUS, &Status::Successful);
         env.events().publish(("campaign", "withdrawn"), (creator, total));
