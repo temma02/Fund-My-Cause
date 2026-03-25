@@ -360,6 +360,14 @@ impl CrowdfundContract {
             .unwrap_or(0)
     }
 
+    pub fn is_contributor(env: Env, address: Address) -> bool {
+        env.storage()
+            .persistent()
+            .get::<_, i128>(&DataKey::Contribution(address))
+            .unwrap_or(0)
+            > 0
+    }
+
     pub fn min_contribution(env: Env) -> i128 {
         env.storage().instance().get(&KEY_MIN).unwrap()
     }
