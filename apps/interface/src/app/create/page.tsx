@@ -6,6 +6,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { useWallet } from "@/context/WalletContext";
 import { buildInitializeTx, submitSignedTx } from "@/lib/soroban";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { uploadToPinata } from "@/lib/pinata";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -95,24 +96,54 @@ function Step1({ data, set }: { data: FormData; set: (k: keyof FormData, v: stri
   );
 }
 
+const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+const ACCEPTED = ["image/png", "image/jpeg", "image/webp"];
+
 function Step2({ data, set }: { data: FormData; set: (k: keyof FormData, v: string) => void }) {
+  const [preview, setPreview] = React.useState<string | null>(null);
+  const [uploading, setUploading] = React.useState(false);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!ACCEPTED.includes(file.type)) { setUploadError("Only PNG, JPG, or WebP allowed."); return; }
+    if (file.size > MAX_SIZE) { setUploadError("File must be under 5 MB."); return; }
+
+    setUploadError(null);
+    setPreview(URL.createObjectURL(file));
+    setUploading(true);
+    try {
+      const cid = await uploadToPinata(file);
+      set("imageUrl", cid);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <Field label="Image URL or IPFS URI">
-        <input className={inputCls} placeholder="https:// or ipfs://" value={data.imageUrl} onChange={(e) => set("imageUrl", e.target.value)} />
+      <Field label="Campaign Image (PNG / JPG / WebP, max 5 MB)">
+        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-700 rounded-xl cursor-pointer hover:border-indigo-500 transition">
+          <span className="text-sm text-gray-400">
+            {uploading ? "Uploading…" : "Click to select a file"}
+          </span>
+          <input type="file" accept={ACCEPTED.join(",")} className="hidden" onChange={handleFile} disabled={uploading} />
+        </label>
       </Field>
-      {data.imageUrl && (
+
+      {uploadError && <p className="text-red-400 text-sm">{uploadError}</p>}
+
+      {preview && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={data.imageUrl}
-          alt="preview"
-          className="w-full h-48 object-cover rounded-xl border border-gray-700"
-          onError={(e) => (e.currentTarget.style.display = "none")}
-        />
+        <img src={preview} alt="preview" className="w-full h-48 object-cover rounded-xl border border-gray-700" />
       )}
-      <p className="text-xs text-gray-500">
-        Image is stored off-chain. Paste a public URL or an IPFS gateway link.
-      </p>
+
+      {data.imageUrl && !uploading && (
+        <p className="text-xs text-gray-500 break-all">Stored as: {data.imageUrl}</p>
+      )}
     </div>
   );
 }
