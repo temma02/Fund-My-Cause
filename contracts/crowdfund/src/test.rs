@@ -765,3 +765,46 @@ fn test_campaign_with_events() {
     let withdraw_event = events.iter().find(|e| e.1 == withdraw_topics);
     assert!(withdraw_event.is_some(), "withdrawn event not found");
 }
+
+#[test]
+fn test_initialize_invalid_goal() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let creator = Address::generate(&env);
+    let token_id = env.register_stellar_asset_contract(Address::generate(&env));
+    let client = CrowdfundContractClient::new(&env, &env.register_contract(None, CrowdfundContract));
+
+    env.ledger().set_timestamp(100);
+    let result = client.try_initialize(&creator, &token_id, &0, &200, &10,
+        &String::from_str(&env, "T"), &String::from_str(&env, "D"), &None, &None);
+    assert_eq!(result.err(), Some(Ok(ContractError::InvalidGoal)));
+}
+
+#[test]
+fn test_initialize_invalid_deadline() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let creator = Address::generate(&env);
+    let token_id = env.register_stellar_asset_contract(Address::generate(&env));
+    let client = CrowdfundContractClient::new(&env, &env.register_contract(None, CrowdfundContract));
+
+    env.ledger().set_timestamp(500);
+    // deadline == current timestamp (not strictly greater)
+    let result = client.try_initialize(&creator, &token_id, &1000, &500, &10,
+        &String::from_str(&env, "T"), &String::from_str(&env, "D"), &None, &None);
+    assert_eq!(result.err(), Some(Ok(ContractError::InvalidDeadline)));
+}
+
+#[test]
+fn test_initialize_invalid_min_contribution() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let creator = Address::generate(&env);
+    let token_id = env.register_stellar_asset_contract(Address::generate(&env));
+    let client = CrowdfundContractClient::new(&env, &env.register_contract(None, CrowdfundContract));
+
+    env.ledger().set_timestamp(100);
+    let result = client.try_initialize(&creator, &token_id, &1000, &200, &-1,
+        &String::from_str(&env, "T"), &String::from_str(&env, "D"), &None, &None);
+    assert_eq!(result.err(), Some(Ok(ContractError::BelowMinimum)));
+}

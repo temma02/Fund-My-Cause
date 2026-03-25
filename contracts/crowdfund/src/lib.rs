@@ -104,6 +104,11 @@ pub enum ContractError {
     GoalReached = 5,
     Overflow = 6,
     NotActive = 7,
+    InvalidDeadline = 8,
+    CampaignPaused = 9,
+    InvalidFee = 10,
+    BelowMinimum = 11,
+    InvalidGoal = 12,
     TokenNotAccepted = 8,
 }
 
@@ -133,6 +138,15 @@ impl CrowdfundContract {
         }
         creator.require_auth();
 
+        if goal <= 0 {
+            return Err(ContractError::InvalidGoal);
+        }
+        if deadline <= env.ledger().timestamp() {
+            return Err(ContractError::InvalidDeadline);
+        }
+        if min_contribution < 0 {
+            return Err(ContractError::BelowMinimum);
+        }
         env.storage().instance().set(&KEY_ADMIN, &creator);
 
         if let Some(ref config) = platform_config {
