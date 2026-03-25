@@ -42,7 +42,7 @@ const KEY_PLATFORM: Symbol = symbol_short!("PLATFORM");
 
 // ── Data Types ────────────────────────────────────────────────────────────────
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 #[contracttype]
 pub enum Status {
     Active,
@@ -343,6 +343,10 @@ impl CrowdfundContract {
 
     pub fn creator(env: Env) -> Address {
         env.storage().instance().get(&KEY_CREATOR).unwrap()
+    }
+
+    pub fn status(env: Env) -> Status {
+        env.storage().instance().get(&DataKey::Status).unwrap()
     }
 
     pub fn goal(env: Env) -> i128 {
