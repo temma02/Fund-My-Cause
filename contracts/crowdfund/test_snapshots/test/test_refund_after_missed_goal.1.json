@@ -720,14 +720,6 @@
                     "storage": [
                       {
                         "key": {
-                          "symbol": "ADMIN"
-                        },
-                        "val": {
-                          "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
-                        }
-                      },
-                      {
-                        "key": {
                           "symbol": "CREATOR"
                         },
                         "val": {
