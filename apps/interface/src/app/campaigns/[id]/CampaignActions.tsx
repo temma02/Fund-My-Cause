@@ -22,7 +22,7 @@ export function CampaignActions({
   campaignTitle,
   status,
 }: Props) {
-  const { address, connect } = useWallet();
+  const { address, connect, networkMismatch } = useWallet();
   const [pledging, setPledging] = useState(false);
   const [userContribution, setUserContribution] = useState(0);
   const [txStatus, setTxStatus] = useState<"idle" | "pending" | "done" | "error">("idle");
@@ -72,7 +72,8 @@ export function CampaignActions({
         {status === "Active" && !deadlinePassed && (
           <button
             onClick={() => (address ? setPledging(true) : connect())}
-            className="w-full py-3 rounded-xl font-medium bg-indigo-600 hover:bg-indigo-500 transition text-white"
+            disabled={networkMismatch}
+            className="w-full py-3 rounded-xl font-medium bg-indigo-600 hover:bg-indigo-500 transition text-white disabled:opacity-50"
           >
             {address ? "Pledge Now" : "Connect Wallet to Pledge"}
           </button>

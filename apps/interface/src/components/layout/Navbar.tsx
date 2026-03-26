@@ -1,16 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import { Wallet, Rocket, LogOut, Loader2, Sun, Moon, Menu, X } from "lucide-react";
+import { Wallet, Rocket, LogOut, Loader2, Sun, Moon, Menu, X, AlertTriangle } from "lucide-react";
 import { useWallet } from "@/context/WalletContext";
 import { useTheme } from "@/context/ThemeContext";
+import { NETWORK_NAME } from "@/lib/constants";
 
 export function Navbar() {
-  const { address, connect, disconnect, isConnecting, error } = useWallet();
+  const { address, connect, disconnect, isConnecting, isAutoConnecting, error, networkMismatch, walletNetwork } = useWallet();
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
+    <div>
     <nav className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
       <div className="flex items-center gap-2 font-bold text-lg">
         <Rocket className="text-indigo-500 dark:text-indigo-400" size={20} />
@@ -98,5 +100,17 @@ export function Navbar() {
         </div>
       )}
     </nav>
+    {networkMismatch && walletNetwork && (
+      <div className="flex items-center gap-2 px-4 py-2 bg-yellow-100 dark:bg-yellow-900/40 border-b border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-300 text-sm">
+        <AlertTriangle size={15} className="shrink-0" />
+        Your wallet is on <strong className="mx-1">{walletNetwork}</strong> but this app uses <strong className="mx-1">{NETWORK_NAME}</strong>. Please switch networks in Freighter.
+      </div>
+    )}
+    {isAutoConnecting && (
+      <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 text-xs">
+        <Loader2 size={12} className="animate-spin" /> Restoring wallet session…
+      </div>
+    )}
+    </div>
   );
 }

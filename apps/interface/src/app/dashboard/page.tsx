@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { WalletGuard } from "@/components/WalletGuard";
 import { useWallet } from "@/context/WalletContext";
 import {
   fetchCampaignData,
@@ -16,9 +17,6 @@ import {
 } from "@/lib/soroban";
 import { Loader2, PlusCircle } from "lucide-react";
 
-// ── Local storage key for campaigns created by this wallet ───────────────────
-// The app stores { address -> contractId[] } in localStorage after deploy.
-// Dashboard reads from that registry.
 const REGISTRY_KEY = "fmc:campaigns";
 
 function getContractIds(address: string): string[] {
@@ -31,8 +29,6 @@ function getContractIds(address: string): string[] {
     return [];
   }
 }
-
-// ── Status badge ─────────────────────────────────────────────────────────────
 
 const STATUS_STYLES: Record<CampaignStatus, string> = {
   Active: "bg-indigo-900 text-indigo-300",
@@ -48,8 +44,6 @@ function StatusBadge({ status }: { status: CampaignStatus }) {
     </span>
   );
 }
-
-// ── Edit metadata modal ───────────────────────────────────────────────────────
 
 function EditModal({
   campaign,
@@ -109,8 +103,6 @@ function EditModal({
   );
 }
 
-// ── Campaign card ─────────────────────────────────────────────────────────────
-
 function CampaignCard({
   campaign,
   onAction,
@@ -120,7 +112,7 @@ function CampaignCard({
   campaign: CampaignData;
   onAction: (contractId: string, action: "withdraw" | "cancel") => Promise<void>;
   onEdit: (campaign: CampaignData) => void;
-  actionPending: string | null; // contractId:action
+  actionPending: string | null;
 }) {
   const stroopsToXlm = (n: bigint) => (Number(n) / 10_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 });
   const progress = campaign.goal > BigInt(0) ? Math.min(100, Number((campaign.totalRaised * BigInt(10000)) / campaign.goal) / 100) : 0;
@@ -131,7 +123,6 @@ function CampaignCard({
   const canWithdraw = campaign.status === "Successful" || (isExpired && campaign.totalRaised >= campaign.goal);
   const canCancel = campaign.status === "Active";
   const canEdit = campaign.status === "Active";
-
   const isPending = (action: string) => actionPending === `${campaign.contractId}:${action}`;
 
   return (
@@ -140,18 +131,13 @@ function CampaignCard({
         <h2 className="font-semibold text-base leading-tight">{campaign.title}</h2>
         <StatusBadge status={campaign.status} />
       </div>
-
       <ProgressBar progress={progress} />
-
       <div className="flex justify-between text-sm text-gray-400">
         <span>{stroopsToXlm(campaign.totalRaised)} XLM raised</span>
         <span>Goal: {stroopsToXlm(campaign.goal)} XLM</span>
       </div>
-
       <p className="text-xs text-gray-500">Deadline: {deadline}</p>
-
       <p className="text-xs text-gray-600 truncate font-mono">{campaign.contractId}</p>
-
       <div className="flex flex-wrap gap-2 pt-1">
         {canWithdraw && (
           <button
@@ -187,10 +173,8 @@ function CampaignCard({
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-
 export default function DashboardPage() {
-  const { address, connect, isConnecting, signTx } = useWallet();
+  const { address, signTx, networkMismatch } = useWallet();
   const router = useRouter();
 
   const [campaigns, setCampaigns] = useState<CampaignData[]>([]);
@@ -222,38 +206,15 @@ export default function DashboardPage() {
     if (address) loadCampaigns(address);
   }, [address, loadCampaigns]);
 
-  // Wallet gate — redirect with message
-  if (!address) {
-    return (
-      <main className="min-h-screen bg-gray-950 text-white">
-        <Navbar />
-        <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4 text-center px-6">
-          <p className="text-gray-400">Connect your wallet to view your dashboard.</p>
-          <button
-            onClick={connect}
-            disabled={isConnecting}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl font-medium transition disabled:opacity-50"
-          >
-            {isConnecting && <Loader2 size={16} className="animate-spin" />}
-            Connect Wallet
-          </button>
-          <button onClick={() => router.push("/")} className="text-sm text-gray-500 hover:text-gray-300 transition">
-            Back to Home
-          </button>
-        </div>
-      </main>
-    );
-  }
-
   const handleAction = async (contractId: string, action: "withdraw" | "cancel") => {
     setActionPending(`${contractId}:${action}`);
     try {
       const xdr = action === "withdraw"
-        ? await buildWithdrawTx(address, contractId)
-        : await buildCancelTx(address, contractId);
+        ? await buildWithdrawTx(address!, contractId)
+        : await buildCancelTx(address!, contractId);
       const signed = await signTx(xdr);
       await submitSignedTx(signed);
-      await loadCampaigns(address);
+      await loadCampaigns(address!);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Transaction failed.");
     } finally {
@@ -262,66 +223,68 @@ export default function DashboardPage() {
   };
 
   const handleEdit = async (contractId: string, title: string, description: string) => {
-    const xdr = await buildUpdateMetadataTx(address, contractId, title, description);
+    const xdr = await buildUpdateMetadataTx(address!, contractId, title, description);
     const signed = await signTx(xdr);
     await submitSignedTx(signed);
-    await loadCampaigns(address);
+    await loadCampaigns(address!);
   };
 
   return (
     <main className="min-h-screen bg-gray-950 text-white">
       <Navbar />
-
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">My Campaigns</h1>
-          <button
-            onClick={() => router.push("/create")}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm font-medium transition"
-          >
-            <PlusCircle size={16} /> New Campaign
-          </button>
-        </div>
-
-        {loading && (
-          <div className="flex justify-center py-20">
-            <Loader2 size={32} className="animate-spin text-indigo-400" />
-          </div>
-        )}
-
-        {!loading && loadError && (
-          <p className="text-yellow-400 text-sm mb-4">{loadError}</p>
-        )}
-
-        {!loading && campaigns.length === 0 && (
-          <div className="text-center py-20 text-gray-500">
-            <p>No campaigns found for this wallet.</p>
-            <button onClick={() => router.push("/create")} className="mt-4 text-indigo-400 hover:text-indigo-300 text-sm transition">
-              Create your first campaign →
+      <WalletGuard message="Connect your wallet to view your dashboard.">
+        <div className="max-w-4xl mx-auto px-6 py-12">
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold">My Campaigns</h1>
+            <button
+              onClick={() => router.push("/create")}
+              disabled={networkMismatch}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm font-medium transition disabled:opacity-50"
+            >
+              <PlusCircle size={16} /> New Campaign
             </button>
           </div>
-        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {campaigns.map((c) => (
-            <CampaignCard
-              key={c.contractId}
-              campaign={c}
-              onAction={handleAction}
-              onEdit={setEditTarget}
-              actionPending={actionPending}
-            />
-          ))}
+          {loading && (
+            <div className="flex justify-center py-20">
+              <Loader2 size={32} className="animate-spin text-indigo-400" />
+            </div>
+          )}
+
+          {!loading && loadError && (
+            <p className="text-yellow-400 text-sm mb-4">{loadError}</p>
+          )}
+
+          {!loading && campaigns.length === 0 && (
+            <div className="text-center py-20 text-gray-500">
+              <p>No campaigns found for this wallet.</p>
+              <button onClick={() => router.push("/create")} className="mt-4 text-indigo-400 hover:text-indigo-300 text-sm transition">
+                Create your first campaign →
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {campaigns.map((c) => (
+              <CampaignCard
+                key={c.contractId}
+                campaign={c}
+                onAction={handleAction}
+                onEdit={setEditTarget}
+                actionPending={actionPending}
+              />
+            ))}
+          </div>
         </div>
-      </div>
 
-      {editTarget && (
-        <EditModal
-          campaign={editTarget}
-          onClose={() => setEditTarget(null)}
-          onSave={handleEdit}
-        />
-      )}
+        {editTarget && (
+          <EditModal
+            campaign={editTarget}
+            onClose={() => setEditTarget(null)}
+            onSave={handleEdit}
+          />
+        )}
+      </WalletGuard>
     </main>
   );
 }

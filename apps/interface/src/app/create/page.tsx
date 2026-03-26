@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
+import { WalletGuard } from "@/components/WalletGuard";
 import { useWallet } from "@/context/WalletContext";
 import { buildInitializeTx, submitSignedTx } from "@/lib/soroban";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
@@ -213,7 +214,7 @@ function validateStep(step: number, data: FormData): string | null {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function CreateCampaignPage() {
-  const { address, connect, isConnecting, signTx } = useWallet();
+  const { address, signTx, networkMismatch } = useWallet();
   const router = useRouter();
 
   const [step, setStep] = useState(0);
@@ -280,127 +281,100 @@ export default function CreateCampaignPage() {
 
   // ── Wallet gate ─────────────────────────────────────────────────────────────
 
-  if (!address) {
-    return (
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">
-        <Navbar />
-        <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4">
-          <p className="text-gray-600 dark:text-gray-400">Connect your wallet to create a campaign.</p>
-          <button
-            onClick={connect}
-            disabled={isConnecting}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl font-medium transition disabled:opacity-50 text-white"
-          >
-            {isConnecting && <Loader2 size={16} className="animate-spin" />}
-            Connect Wallet
-          </button>
-        </div>
-      </main>
-    );
-  }
-
-  // ── Post-deploy states ──────────────────────────────────────────────────────
-
-  if (txStatus === "success") {
-    return (
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">
-        <Navbar />
-        <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4 text-center px-6">
-          <CheckCircle2 size={48} className="text-green-500 dark:text-green-400" />
-          <h2 className="text-2xl font-bold">Campaign Deployed!</h2>
-          <p className="text-gray-600 dark:text-gray-400 text-sm break-all">Tx: {txHash}</p>
-          <button onClick={() => router.push("/")} className="mt-2 bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-xl transition text-white">
-            Back to Home
-          </button>
-        </div>
-      </main>
-    );
-  }
-
-  // ── Form ────────────────────────────────────────────────────────────────────
-
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">
       <Navbar />
-
-      <div className="max-w-xl mx-auto px-6 py-12">
-        <h1 className="text-3xl font-bold mb-8">Create Campaign</h1>
-
-        {/* Step indicator */}
-        <div className="flex items-center gap-2 mb-8">
-          {STEPS.map((label, i) => (
-            <React.Fragment key={i}>
-              <div className="flex flex-col items-center gap-1">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition ${
-                    i < step
-                      ? "bg-indigo-600 text-white"
-                      : i === step
-                      ? "bg-indigo-500 text-white ring-2 ring-indigo-300"
-                      : "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-500"
-                  }`}
-                >
-                  {i < step ? "✓" : i + 1}
-                </div>
-                <span className="text-xs text-gray-500 hidden sm:block">{label}</span>
-              </div>
-              {i < STEPS.length - 1 && (
-                <div className={`flex-1 h-px ${i < step ? "bg-indigo-600" : "bg-gray-300 dark:bg-gray-700"}`} />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-
-        {/* Step content */}
-        <div className="bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 space-y-6">
-          <h2 className="text-lg font-semibold">{STEPS[step]}</h2>
-
-          {step === 0 && <Step1 data={data} set={set} />}
-          {step === 1 && <Step2 data={data} set={set} />}
-          {step === 2 && <Step3 data={data} set={set} />}
-          {step === 3 && <Step4 data={data} />}
-
-          {validationError && (
-            <p className="text-red-500 dark:text-red-400 text-sm">{validationError}</p>
-          )}
-
-          {txStatus === "error" && txError && (
-            <div className="flex items-start gap-2 text-red-500 dark:text-red-400 text-sm bg-red-100 dark:bg-red-950/40 border border-red-300 dark:border-red-800 rounded-xl p-3">
-              <XCircle size={16} className="mt-0.5 shrink-0" />
-              {txError}
-            </div>
-          )}
-
-          {/* Navigation */}
-          <div className="flex justify-between pt-2">
-            <button
-              onClick={back}
-              disabled={step === 0}
-              className="px-4 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 transition"
-            >
-              Back
+      <WalletGuard message="Connect your wallet to create a campaign.">
+        {txStatus === "success" ? (
+          <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4 text-center px-6">
+            <CheckCircle2 size={48} className="text-green-500 dark:text-green-400" />
+            <h2 className="text-2xl font-bold">Campaign Deployed!</h2>
+            <p className="text-gray-600 dark:text-gray-400 text-sm break-all">Tx: {txHash}</p>
+            <button onClick={() => router.push("/")} className="mt-2 bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-xl transition text-white">
+              Back to Home
             </button>
-
-            {step < STEPS.length - 1 ? (
-              <button
-                onClick={next}
-                className="bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-xl text-sm font-medium transition text-white"
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={deploy}
-                disabled={txStatus === "pending"}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-xl text-sm font-medium transition disabled:opacity-50 text-white"
-              >
-                {txStatus === "pending" && <Loader2 size={16} className="animate-spin" />}
-                {txStatus === "pending" ? "Deploying..." : "Sign & Deploy"}
-              </button>
-            )}
           </div>
-        </div>
-      </div>
+        ) : (
+          <div className="max-w-xl mx-auto px-6 py-12">
+            <h1 className="text-3xl font-bold mb-8">Create Campaign</h1>
+
+            {/* Step indicator */}
+            <div className="flex items-center gap-2 mb-8">
+              {STEPS.map((label, i) => (
+                <React.Fragment key={i}>
+                  <div className="flex flex-col items-center gap-1">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition ${
+                        i < step
+                          ? "bg-indigo-600 text-white"
+                          : i === step
+                          ? "bg-indigo-500 text-white ring-2 ring-indigo-300"
+                          : "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-500"
+                      }`}
+                    >
+                      {i < step ? "✓" : i + 1}
+                    </div>
+                    <span className="text-xs text-gray-500 hidden sm:block">{label}</span>
+                  </div>
+                  {i < STEPS.length - 1 && (
+                    <div className={`flex-1 h-px ${i < step ? "bg-indigo-600" : "bg-gray-300 dark:bg-gray-700"}`} />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* Step content */}
+            <div className="bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 space-y-6">
+              <h2 className="text-lg font-semibold">{STEPS[step]}</h2>
+
+              {step === 0 && <Step1 data={data} set={set} />}
+              {step === 1 && <Step2 data={data} set={set} />}
+              {step === 2 && <Step3 data={data} set={set} />}
+              {step === 3 && <Step4 data={data} />}
+
+              {validationError && (
+                <p className="text-red-500 dark:text-red-400 text-sm">{validationError}</p>
+              )}
+
+              {txStatus === "error" && txError && (
+                <div className="flex items-start gap-2 text-red-500 dark:text-red-400 text-sm bg-red-100 dark:bg-red-950/40 border border-red-300 dark:border-red-800 rounded-xl p-3">
+                  <XCircle size={16} className="mt-0.5 shrink-0" />
+                  {txError}
+                </div>
+              )}
+
+              {/* Navigation */}
+              <div className="flex justify-between pt-2">
+                <button
+                  onClick={back}
+                  disabled={step === 0}
+                  className="px-4 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 transition"
+                >
+                  Back
+                </button>
+
+                {step < STEPS.length - 1 ? (
+                  <button
+                    onClick={next}
+                    className="bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-xl text-sm font-medium transition text-white"
+                  >
+                    Next
+                  </button>
+                ) : (
+                  <button
+                    onClick={deploy}
+                    disabled={txStatus === "pending" || networkMismatch}
+                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-xl text-sm font-medium transition disabled:opacity-50 text-white"
+                  >
+                    {txStatus === "pending" && <Loader2 size={16} className="animate-spin" />}
+                    {txStatus === "pending" ? "Deploying..." : "Sign & Deploy"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </WalletGuard>
     </main>
   );
 }
