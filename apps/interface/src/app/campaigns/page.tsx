@@ -169,13 +169,13 @@ function CampaignsInner() {
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         {/* Search */}
         <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Search campaigns..."
             value={query}
             onChange={(e) => setParam("q", e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-xl pl-9 pr-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+            className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl pl-9 pr-4 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-indigo-500"
           />
         </div>
 
@@ -183,7 +183,7 @@ function CampaignsInner() {
         <select
           value={sort}
           onChange={(e) => setParam("sort", e.target.value)}
-          className="bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+          className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-indigo-500"
         >
           <option value="newest">Newest</option>
           <option value="most-funded">Most Funded</option>
@@ -200,7 +200,7 @@ function CampaignsInner() {
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
               filter === tab.value
                 ? "bg-indigo-600 text-white"
-                : "bg-gray-800 text-gray-400 hover:text-white"
+                : "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             }`}
           >
             {tab.label}
@@ -217,20 +217,20 @@ function CampaignsInner() {
             const progress = (campaign.raised / campaign.goal) * 100;
             const isFunded = progress >= 100;
             return (
-              <div key={campaign.id} className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800">
+              <div key={campaign.id} className="bg-gray-100 dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={campaign.image} alt={campaign.title} className="w-full h-48 object-cover" />
                 <div className="p-5 space-y-3">
-                  <h2 className="text-lg font-semibold">{campaign.title}</h2>
-                  <p className="text-gray-400 text-sm">{campaign.description}</p>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{campaign.title}</h2>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">{campaign.description}</p>
                   <ProgressBar progress={progress} />
-                  <div className="flex justify-between text-sm text-gray-400">
+                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                     <span>{campaign.raised.toLocaleString()} XLM raised</span>
                     <span>{campaign.goal.toLocaleString()} XLM goal</span>
                   </div>
                   <CountdownTimer deadline={campaign.deadline} />
                   <button
-                    className="w-full py-2 rounded-xl font-medium bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    className="w-full py-2 rounded-xl font-medium bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition text-white"
                     onClick={() => !isFunded && setPledge(campaign.title)}
                     disabled={isFunded}
                   >
@@ -252,7 +252,7 @@ function CampaignsInner() {
 
 export default function CampaignsPage() {
   return (
-    <main className="min-h-screen bg-gray-950 text-white">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">
       <Navbar />
       <section className="max-w-6xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold mb-8">Active Campaigns</h1>

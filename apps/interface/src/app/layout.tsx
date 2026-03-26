@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { WalletProvider } from "@/context/WalletContext";
 import { ToastProvider } from "@/components/ui/Toast";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 export const metadata: Metadata = {
   title: "Fund-My-Cause",
@@ -10,11 +11,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body>
-        <ToastProvider>
-          <WalletProvider>{children}</WalletProvider>
-        </ToastProvider>
+        <ThemeProvider>
+          <ToastProvider>
+            <WalletProvider>{children}</WalletProvider>
+          </ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
