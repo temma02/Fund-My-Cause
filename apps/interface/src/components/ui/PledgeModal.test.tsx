@@ -1,15 +1,15 @@
 import React from "react";
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { PledgeModal } from "./PledgeModal";
 
-// ── Mutable wallet state (read at call time via getter) ───────────────────────
+// ── Mutable wallet state ──────────────────────────────────────────────────────
 let mockWalletAddress: string | null = null;
 const mockConnect = jest.fn();
+const mockSignTx = jest.fn().mockResolvedValue("signed-xdr");
 const mockAddToast = jest.fn();
 
 jest.mock("@/context/WalletContext", () => ({
-  useWallet: () => ({ address: mockWalletAddress, connect: mockConnect }),
+  useWallet: () => ({ address: mockWalletAddress, connect: mockConnect, signTx: mockSignTx }),
 }));
 
 jest.mock("@/components/ui/Toast", () => ({
@@ -22,9 +22,10 @@ jest.mock("@/components/ui/TransactionStatus", () => ({
   ),
 }));
 
-// Mock the contract client (Issue #49)
+// Mock the contract client (Issue #49) — includes new simulate helpers
 jest.mock("@/lib/soroban", () => ({
-  buildInitializeTx: jest.fn(),
+  buildContributeTx: jest.fn().mockResolvedValue("unsigned-xdr"),
+  simulateTx: jest.fn().mockResolvedValue({ minFeeXlm: "0.001 XLM", preparedXdr: "prepared-xdr" }),
   submitSignedTx: jest.fn().mockResolvedValue("mockhash123"),
   fetchCampaign: jest.fn(),
   fetchAllCampaigns: jest.fn(),
@@ -33,7 +34,13 @@ jest.mock("@/lib/soroban", () => ({
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function renderModal(onClose = jest.fn()) {
-  return render(<PledgeModal campaignTitle="Save the Rainforest" onClose={onClose} />);
+  return render(
+    <PledgeModal
+      campaignTitle="Save the Rainforest"
+      contractId="CABC123"
+      onClose={onClose}
+    />,
+  );
 }
 
 beforeEach(() => {
@@ -59,12 +66,8 @@ describe("PledgeModal", () => {
   it("calls onClose when the close button is clicked", () => {
     const onClose = jest.fn();
     renderModal(onClose);
-    // The X icon button has no text label — find it as the unnamed button
-    // (the only button without visible text in the header row)
-    const buttons = screen.getAllByRole("button");
-    const closeBtn = buttons.find((b) => !b.textContent?.trim());
-    expect(closeBtn).toBeDefined();
-    fireEvent.click(closeBtn!);
+    const closeBtn = screen.getByRole("button", { name: /close/i });
+    fireEvent.click(closeBtn);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -72,19 +75,16 @@ describe("PledgeModal", () => {
   it("calls connect() when pledging without a connected wallet", () => {
     mockWalletAddress = null;
     renderModal();
-    const btn = screen.getByRole("button", { name: /connect wallet to pledge/i });
-    fireEvent.click(btn);
+    fireEvent.click(screen.getByRole("button", { name: /connect wallet to pledge/i }));
     expect(mockConnect).toHaveBeenCalledTimes(1);
   });
 
-  // 4. Amount input rejects negative numbers
-  it("does not allow negative amounts in the input", () => {
+  // 4. Amount input rejects negative numbers (no tx started)
+  it("does not start a transaction for negative amounts", () => {
     mockWalletAddress = "GABC123";
     renderModal();
     const input = screen.getByPlaceholderText(/amount in xlm/i) as HTMLInputElement;
     fireEvent.change(input, { target: { value: "-50" } });
-    // The input accepts the typed value (browser validation is UI-level),
-    // but the pledge button should still be present and no tx should have started.
     expect(input.value).toBe("-50");
     expect(screen.queryByTestId("tx-status")).not.toBeInTheDocument();
   });
@@ -94,19 +94,24 @@ describe("PledgeModal", () => {
     mockWalletAddress = "GABC123";
     renderModal();
 
-    fireEvent.click(screen.getByRole("button", { name: /confirm pledge/i }));
+    // Enter a valid amount
+    fireEvent.change(screen.getByPlaceholderText(/amount in xlm/i), {
+      target: { value: "10" },
+    });
 
-    // Component enters "signing" — TransactionStatus is shown
-    expect(screen.getByTestId("tx-status")).toBeInTheDocument();
+    // Click confirm — kicks off simulate → sign → submit chain (all mocked)
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /confirm pledge/i }));
+    });
 
-    // Advance through all simulated timeouts: 1000 + 1500 + 1500 = 4000 ms
-    act(() => { jest.advanceTimersByTime(4100); });
+    // Advance the 1s confirming pause
+    act(() => { jest.advanceTimersByTime(1100); });
 
     await waitFor(() => {
       expect(mockAddToast).toHaveBeenCalledWith(
         "Pledge submitted successfully!",
         "success",
-        expect.any(String),
+        "mockhash123",
       );
     });
 
