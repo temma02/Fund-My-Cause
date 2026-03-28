@@ -502,52 +502,48 @@ export interface ContributionRecord {
  * matches "contribute". Amount is read from the first i128 argument.
  * Returns an empty array when the contract account has no history yet.
  */
-export async function fetchTransactionHistory(
-  contractId: string,
-  limit = 10,
-): Promise<ContributionRecord[]> {
-  const network = process.env.NEXT_PUBLIC_NETWORK === "mainnet" ? "mainnet" : "testnet";
-  const horizonBase =
-    network === "mainnet"
-      ? "https://horizon.stellar.org"
-      : "https://horizon-testnet.stellar.org";
+export async function fetchAllCampaigns(): Promise<CampaignData[]> {
+  if (CONTRACT_IDS.length === 0) return [];
+  const results = await Promise.allSettled(
+    CONTRACT_IDS.map((id) => fetchCampaign(id))
+  );
+  return results
+    .filter((r): r is PromiseFulfilledResult<CampaignData> => r.status === "fulfilled")
+    .map((r) => r.value);
+}
 
-  const url =
-    `${horizonBase}/accounts/${contractId}/operations` +
-    `?limit=${limit}&order=desc&include_failed=false`;
+export async function fetchCampaignData(contractId: string): Promise<CampaignData> {
+  const [stats, deadline, title, description] = await Promise.all([
+    simulateView(contractId, "get_stats"),
+    simulateView(contractId, "deadline"),
+    simulateView(contractId, "title"),
+    simulateView(contractId, "description"),
+  ]);
 
-  let json: HorizonOperationsPage;
-  try {
-    const res = await fetch(url, { next: { revalidate: 60 } });
-    if (res.status === 404) return []; // contract account not yet on-chain
-    if (!res.ok) throw new Error(`Horizon ${res.status}`);
-    json = await res.json();
-  } catch {
-    return []; // network error — degrade gracefully
+  // stats shape: { total_raised, goal, progress_bps, contributor_count, average_contribution, ... }
+  const raisedStroops = Number(stats.total_raised ?? 0);
+  const goalStroops = Number(stats.goal ?? 0);
+  const deadlineSecs = Number(deadline);
+  const now = Math.floor(Date.now() / 1000);
+
+  let status: CampaignStatus = "Active";
+  if (deadlineSecs < now) {
+    status = raisedStroops >= goalStroops ? "Successful" : "Refunded";
   }
 
-  const records: ContributionRecord[] = [];
-
-  for (const op of json._embedded?.records ?? []) {
-    if (op.type !== "invoke_host_function") continue;
-
-    // The function name is encoded in the parameters; Horizon exposes it
-    // as op.function which is the base64 XDR of the invocation.
-    // We use the transaction source as the contributor address.
-    const amountXlm = parseContributeAmount(op);
-    if (amountXlm === null) continue; // not a contribute call
-
-    records.push({
-      txHash: op.transaction_hash,
-      contributor: op.source_account,
-      amountXlm,
-      timestamp: op.created_at,
-    });
-
-    if (records.length >= limit) break;
-  }
-
-  return records;
+  return {
+    contractId,
+    title: String(title),
+    description: String(description),
+    raised: raisedStroops / 1e7,
+    goal: goalStroops / 1e7,
+    deadline: new Date(deadlineSecs * 1000).toISOString(),
+    creator: "",
+    socialLinks: [],
+    contributorCount: Number(stats.contributor_count ?? 0),
+    averageContribution: Number(stats.average_contribution ?? 0) / 1e7,
+    status,
+  };
 }
 
 // ── Horizon response types (minimal) ─────────────────────────────────────────

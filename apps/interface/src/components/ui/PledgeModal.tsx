@@ -5,22 +5,35 @@ import { X } from "lucide-react";
 import { useWallet } from "@/context/WalletContext";
 import { TransactionStatus, TxStatus } from "@/components/ui/TransactionStatus";
 import { useToast } from "@/components/ui/Toast";
-import { buildContributeTx, simulateTx, submitSignedTx } from "@/lib/soroban";
+import { contribute } from "@/lib/contract";
+
+const XLM_TO_STROOPS = 10_000_000n;
 
 interface PledgeModalProps {
-  campaignTitle: string;
   contractId: string;
+  campaignTitle: string;
+  /** Minimum contribution in stroops. */
+  minContribution?: bigint;
   onClose: () => void;
+  /** Called after a successful pledge so the parent can refresh stats. */
+  onSuccess?: () => void;
 }
 
-export function PledgeModal({ campaignTitle, contractId, onClose }: PledgeModalProps) {
+export function PledgeModal({
+  contractId,
+  campaignTitle,
+  minContribution = 1n,
+  onClose,
+  onSuccess,
+}: PledgeModalProps) {
   const { address, connect, signTx } = useWallet();
   const { addToast } = useToast();
   const [amount, setAmount] = useState("");
   const [txStatus, setTxStatus] = useState<TxStatus>("idle");
-  const [txHash, setTxHash] = useState("");
-  const [txError, setTxError] = useState("");
-  const [estimatedFee, setEstimatedFee] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
+
+  const minXlm = Number(minContribution) / 1e7;
 
   const handlePledge = async () => {
     if (!address) {
@@ -29,41 +42,38 @@ export function PledgeModal({ campaignTitle, contractId, onClose }: PledgeModalP
     }
 
     const xlm = parseFloat(amount);
-    if (!xlm || xlm <= 0) {
+    if (!amount || isNaN(xlm) || xlm <= 0) {
       addToast("Please enter a valid amount.", "error");
       return;
     }
 
-    setTxError("");
-    setEstimatedFee(null);
+    const stroops = BigInt(Math.round(xlm * 1e7));
+    if (stroops < minContribution) {
+      addToast(`Minimum contribution is ${minXlm} XLM.`, "error");
+      return;
+    }
+
+    setErrorMessage("");
+    setTxStatus("signing");
 
     try {
-      // ── Step 1: build unsigned tx ─────────────────────────────────────────
-      setTxStatus("simulating");
-      const unsignedXdr = await buildContributeTx(address, contractId, xlm);
-
-      // ── Step 2: simulate — estimate fee, catch contract errors early ──────
-      const { minFeeXlm, preparedXdr } = await simulateTx(unsignedXdr);
-      setEstimatedFee(minFeeXlm);
-
-      // ── Step 3: sign with Freighter ───────────────────────────────────────
       setTxStatus("signing");
-      const signedXdr = await signTx(preparedXdr);
-
-      // ── Step 4: submit ────────────────────────────────────────────────────
-      setTxStatus("submitting");
-      const hash = await submitSignedTx(signedXdr);
+      const hash = await contribute(contractId, address, stroops, async (xdr) => {
+        setTxStatus("signing");
+        const signed = await signTx(xdr);
+        setTxStatus("submitting");
+        return signed;
+      });
 
       setTxStatus("confirming");
-      // Brief pause so the user sees the confirming step before success
-      await new Promise((r) => setTimeout(r, 1000));
-
+      // contribute() already polls — by the time it resolves we're confirmed
       setTxHash(hash);
       setTxStatus("success");
       addToast("Pledge submitted successfully!", "success", hash);
+      onSuccess?.();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Transaction failed.";
-      setTxError(msg);
+      setErrorMessage(msg);
       setTxStatus("error");
       addToast(msg, "error");
     }
@@ -72,8 +82,7 @@ export function PledgeModal({ campaignTitle, contractId, onClose }: PledgeModalP
   const handleDismiss = () => {
     setTxStatus("idle");
     setTxHash("");
-    setTxError("");
-    setEstimatedFee(null);
+    setErrorMessage("");
   };
 
   const isProcessing = txStatus !== "idle";
@@ -83,43 +92,34 @@ export function PledgeModal({ campaignTitle, contractId, onClose }: PledgeModalP
       <div className="bg-gray-900 rounded-2xl p-6 w-full max-w-md border border-gray-700 space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Pledge to {campaignTitle}</h2>
-          <button onClick={onClose} aria-label="Close"><X size={20} /></button>
+          <button onClick={onClose} aria-label="Close">
+            <X size={20} />
+          </button>
         </div>
 
-        {txStatus === "success" || txStatus === "error" ? (
+        {txStatus !== "idle" ? (
           <TransactionStatus
             status={txStatus}
             txHash={txHash}
-            errorMessage={txError}
+            errorMessage={errorMessage}
             onDismiss={handleDismiss}
           />
-        ) : isProcessing ? (
-          <>
-            <TransactionStatus status={txStatus} />
-            {/* Show estimated fee once simulation completes */}
-            {estimatedFee && txStatus !== "simulating" && (
-              <p className="text-xs text-gray-400 text-center">
-                Estimated network fee: <span className="text-white font-medium">{estimatedFee}</span>
-              </p>
-            )}
-          </>
         ) : (
           <>
-            <input
-              type="number"
-              min="0"
-              step="any"
-              placeholder="Amount in XLM"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-white placeholder-gray-500 focus:outline-none"
-            />
-            {/* Fee estimate shown after a previous simulation (e.g. user dismissed and retries) */}
-            {estimatedFee && (
-              <p className="text-xs text-gray-400">
-                Estimated fee: <span className="text-white font-medium">{estimatedFee}</span>
-              </p>
-            )}
+            <div className="space-y-1">
+              <input
+                type="number"
+                placeholder={`Amount in XLM (min ${minXlm})`}
+                value={amount}
+                min={minXlm}
+                step="0.1"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-white placeholder-gray-500 focus:outline-none"
+              />
+              {minContribution > XLM_TO_STROOPS && (
+                <p className="text-xs text-gray-500">Minimum: {minXlm} XLM</p>
+              )}
+            </div>
             <button
               onClick={handlePledge}
               className="w-full bg-indigo-600 hover:bg-indigo-500 py-2 rounded-xl font-medium transition disabled:opacity-50"

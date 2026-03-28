@@ -164,54 +164,15 @@ function DashboardCampaignCard({
   onEdit: (campaign: EditableCampaign) => void;
   refreshNonce: number;
 }) {
-  const { info, stats, loading, error, refresh } = useCampaign(contractId);
+  const fmtXlm = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  const progress = campaign.goal > 0 ? Math.min(100, (campaign.raised / campaign.goal) * 100) : 0;
+  const deadline = new Date(campaign.deadline).toLocaleDateString();
+  const isExpired = new Date(campaign.deadline) < new Date();
 
-  useEffect(() => {
-    if (refreshNonce > 0) {
-      refresh();
-    }
-  }, [refresh, refreshNonce]);
-
-  if (loading) {
-    return (
-      <div className="space-y-3 rounded-2xl border border-gray-800 bg-gray-900 p-5">
-        <div className="flex justify-center py-8">
-          <Loader2 size={24} className="animate-spin text-indigo-400" />
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !info || !stats) {
-    return (
-      <div className="space-y-3 rounded-2xl border border-red-900 bg-gray-900 p-5">
-        <p className="text-sm text-red-300">
-          {error ?? "Failed to load campaign."}
-        </p>
-        <p className="truncate font-mono text-xs text-gray-500">{contractId}</p>
-        <button
-          onClick={refresh}
-          className="rounded-lg bg-red-700 px-3 py-1.5 text-xs font-medium transition hover:bg-red-600"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  const progress =
-    stats.goal > 0n
-      ? Number((stats.totalRaised * 10_000n) / stats.goal) / 100
-      : 0;
-  const deadline = new Date(Number(info.deadline) * 1000).toLocaleDateString();
-  const isExpired = Number(info.deadline) * 1000 < Date.now();
-  const canWithdraw =
-    info.status === "Successful" ||
-    (isExpired && stats.totalRaised >= stats.goal);
-  const canCancel = info.status === "Active";
-  const canEdit = info.status === "Active";
-  const isPending = (action: string) =>
-    actionPending === `${contractId}:${action}`;
+  const canWithdraw = campaign.status === "Successful" || (isExpired && campaign.raised >= campaign.goal);
+  const canCancel = campaign.status === "Active";
+  const canEdit = campaign.status === "Active";
+  const isPending = (action: string) => actionPending === `${campaign.contractId}:${action}`;
 
   return (
     <div className="space-y-3 rounded-2xl border border-gray-800 bg-gray-900 p-5">
@@ -221,8 +182,8 @@ function DashboardCampaignCard({
       </div>
       <ProgressBar progress={progress} />
       <div className="flex justify-between text-sm text-gray-400">
-        <span>{formatXlm(stats.totalRaised)} XLM raised</span>
-        <span>Goal: {formatXlm(stats.goal)} XLM</span>
+        <span>{fmtXlm(campaign.raised)} XLM raised</span>
+        <span>Goal: {fmtXlm(campaign.goal)} XLM</span>
       </div>
       <p className="text-xs text-gray-500">Deadline: {deadline}</p>
       <p className="truncate font-mono text-xs text-gray-600">{contractId}</p>
