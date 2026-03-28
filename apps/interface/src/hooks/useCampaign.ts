@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { fetchCampaign, type CampaignData } from "@/lib/soroban";
+import { isValidContractId } from "@/lib/validation";
 
 /**
  * Result object returned by useCampaign hook.
@@ -37,6 +38,16 @@ export function useCampaign(contractId: string): UseCampaignResult {
     let cancelled = false;
     setLoading(true);
     setError(null);
+
+    // Validate contract ID format early
+    if (!isValidContractId(contractId)) {
+      if (!cancelled) {
+        setError(`Invalid contract ID format: ${contractId}`);
+        setLoading(false);
+      }
+      return;
+    }
+
     fetchCampaign(contractId)
       .then((data) => { if (!cancelled) { setInfo(data); setLoading(false); } })
       .catch((e: unknown) => { if (!cancelled) { setError(e instanceof Error ? e.message : String(e)); setLoading(false); } });
