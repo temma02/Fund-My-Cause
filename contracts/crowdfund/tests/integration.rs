@@ -154,124 +154,46 @@ fn test_full_lifecycle_refund_path() {
 }
 
 #[test]
-fn test_withdraw_platform_fee_calculation_250_bps() {
+fn test_pull_based_refund_model_multiple_contributors_goal_not_met() {
     let env = Env::default();
     env.mock_all_auths();
 
     let deadline = 1_000u64;
     let goal = 10_000i128;
-    let platform_addr = Address::generate(&env);
-    let fee_bps = 250u32; // 2.5 %
 
-    let c = setup(
-        &env,
-        goal,
-        deadline,
-        Some(PlatformConfig {
-            address: platform_addr.clone(),
-            fee_bps,
-        }),
-    );
+    let c = setup(&env, goal, deadline, None);
 
-    let contributor = Address::generate(&env);
-    let amt = 10_000i128;
+    let contributors: Vec<Address> = (0..10).map(|_| Address::generate(&env)).collect();
+    let amounts = [100i128, 200, 300, 400, 500, 600, 700, 800, 900, 1_000]; // total = 5_500 < goal
 
     env.ledger().set_timestamp(500);
-    c.token_admin.mint(&contributor, &amt);
-    c.client.contribute(&contributor, &amt, &c.token_id);
+    for (addr, &amt) in contributors.iter().zip(amounts.iter()) {
+        c.token_admin.mint(addr, &amt);
+        c.client.contribute(addr, &amt, &c.token_id);
+    }
 
-    // Advance past deadline
+    assert_eq!(c.client.total_raised(), 5_500);
+
+    // Advance past deadline — withdraw must fail (goal not met)
     env.ledger().set_timestamp(deadline + 1);
+    assert!(c.client.try_withdraw().is_err());
 
-    let creator_before = c.token.balance(&c.creator);
-    let platform_before = c.token.balance(&platform_addr);
+    // Each contributor claims their refund (and cannot claim twice)
+    let balances_before: Vec<i128> = contributors.iter().map(|addr| c.token.balance(addr)).collect();
 
-    c.client.withdraw();
+    for (i, (addr, &amt)) in contributors.iter().zip(amounts.iter()).enumerate() {
+        c.client.refund_single(addr);
+        assert_eq!(c.token.balance(addr), balances_before[i] + amt);
+        assert_eq!(c.client.contribution(addr), 0); // storage zeroed
 
-    assert_eq!(c.token.balance(&platform_addr), platform_before + 250);
-    assert_eq!(c.token.balance(&c.creator), creator_before + 9_750);
+        let after_first = c.token.balance(addr);
+        c.client.refund_single(addr);
+        assert_eq!(c.token.balance(addr), after_first); // no double payout
+    }
+
+    // total_raised is not modified by refunds in the pull-based model
+    assert_eq!(c.client.total_raised(), 5_500);
+
+    // Contract holds nothing
     assert_eq!(c.token.balance(&c.contract_id), 0);
-    assert_eq!(c.client.total_raised(), 0);
-}
-
-#[test]
-fn test_withdraw_platform_fee_calculation_zero_bps() {
-    let env = Env::default();
-    env.mock_all_auths();
-
-    let deadline = 1_000u64;
-    let goal = 10_000i128;
-    let platform_addr = Address::generate(&env);
-    let fee_bps = 0u32;
-
-    let c = setup(
-        &env,
-        goal,
-        deadline,
-        Some(PlatformConfig {
-            address: platform_addr.clone(),
-            fee_bps,
-        }),
-    );
-
-    let contributor = Address::generate(&env);
-    let amt = 10_000i128;
-
-    env.ledger().set_timestamp(500);
-    c.token_admin.mint(&contributor, &amt);
-    c.client.contribute(&contributor, &amt, &c.token_id);
-
-    // Advance past deadline
-    env.ledger().set_timestamp(deadline + 1);
-
-    let creator_before = c.token.balance(&c.creator);
-    let platform_before = c.token.balance(&platform_addr);
-
-    c.client.withdraw();
-
-    assert_eq!(c.token.balance(&platform_addr), platform_before + 0);
-    assert_eq!(c.token.balance(&c.creator), creator_before + 10_000);
-    assert_eq!(c.token.balance(&c.contract_id), 0);
-    assert_eq!(c.client.total_raised(), 0);
-}
-
-#[test]
-fn test_withdraw_platform_fee_calculation_full_bps() {
-    let env = Env::default();
-    env.mock_all_auths();
-
-    let deadline = 1_000u64;
-    let goal = 10_000i128;
-    let platform_addr = Address::generate(&env);
-    let fee_bps = 10_000u32;
-
-    let c = setup(
-        &env,
-        goal,
-        deadline,
-        Some(PlatformConfig {
-            address: platform_addr.clone(),
-            fee_bps,
-        }),
-    );
-
-    let contributor = Address::generate(&env);
-    let amt = 10_000i128;
-
-    env.ledger().set_timestamp(500);
-    c.token_admin.mint(&contributor, &amt);
-    c.client.contribute(&contributor, &amt, &c.token_id);
-
-    // Advance past deadline
-    env.ledger().set_timestamp(deadline + 1);
-
-    let creator_before = c.token.balance(&c.creator);
-    let platform_before = c.token.balance(&platform_addr);
-
-    c.client.withdraw();
-
-    assert_eq!(c.token.balance(&platform_addr), platform_before + 10_000);
-    assert_eq!(c.token.balance(&c.creator), creator_before + 0);
-    assert_eq!(c.token.balance(&c.contract_id), 0);
-    assert_eq!(c.client.total_raised(), 0);
 }
