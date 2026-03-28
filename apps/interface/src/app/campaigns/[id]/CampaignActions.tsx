@@ -105,6 +105,14 @@ export function CampaignActions({
     );
   }
 
+  function handleRefund() {
+    // buildWithdrawTx reused here; replace with buildRefundTx when available
+    executeAction(
+      () => buildWithdrawTx(address!, contractId),
+      "Refund claimed successfully!",
+    );
+  }
+
   function handleWithdraw() {
     executeAction(
       () => buildWithdrawTx(address!, contractId),
