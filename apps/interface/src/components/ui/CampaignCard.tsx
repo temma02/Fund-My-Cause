@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CountdownTimer } from "@/components/ui/CountdownTimer";
 import { formatXlm } from "@/lib/price";
@@ -36,8 +37,15 @@ export function CampaignCard({ campaign, onPledge, xlmPrice = null }: CampaignCa
   return (
     <div className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800">
       <div className="relative">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={campaign.image} alt={campaign.title} className="w-full h-48 object-cover" />
+        <div className="relative w-full h-48">
+          <Image
+            src={campaign.image}
+            alt={campaign.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
+        </div>
         {isFunded && <StatusBadge status="funded" />}
         {isEnded && <StatusBadge status="ended" />}
       </div>

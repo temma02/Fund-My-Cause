@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Loader2 } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CountdownTimer } from "@/components/ui/CountdownTimer";
@@ -56,11 +57,14 @@ export function CampaignDetailContent({ contractId }: { contractId: string }) {
 
   return (
     <>
-      <div className="w-full h-72 overflow-hidden md:h-96">
-        <img
+      <div className="w-full h-72 overflow-hidden md:h-96 relative">
+        <Image
           src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=1600"
           alt={info.title}
-          className="h-full w-full object-cover"
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
         />
       </div>
 
