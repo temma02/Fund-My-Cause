@@ -4,6 +4,7 @@ import { WalletProvider } from "@/context/WalletContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ReactQueryProvider } from "@/context/ReactQueryProvider";
+import { PageTransition } from "@/components/layout/PageTransition";
 
 export const metadata: Metadata = {
   title: "Fund-My-Cause",

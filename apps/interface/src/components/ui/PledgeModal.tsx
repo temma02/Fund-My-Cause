@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect  } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useWallet } from "@/context/WalletContext";
 import { TransactionStatus, TxStatus } from "@/components/ui/TransactionStatus";
@@ -19,6 +20,10 @@ interface PledgeModalProps {
   onClose: () => void;
   /** Called after a successful pledge so the parent can refresh stats. */
   onSuccess?: () => void;
+  /** Called immediately on submit with XLM amount for optimistic UI update. */
+  onOptimisticContribute?: (amountXlm: number) => void;
+  /** Called on tx failure to roll back optimistic update. */
+  onRollbackOptimistic?: () => void;
 }
 
 export function PledgeModal({
@@ -27,6 +32,8 @@ export function PledgeModal({
   minContribution = 1n,
   onClose,
   onSuccess,
+  onOptimisticContribute,
+  onRollbackOptimistic,
 }: PledgeModalProps) {
   const { address, connect, signTx, isSigning } = useWallet();
   const { exists: accountExists, loading: accountLoading } = useAccountExists(address);
@@ -85,6 +92,7 @@ export function PledgeModal({
     setErrorMessage("");
     setPendingTx(true);
     setTxStatus("signing");
+    onOptimisticContribute?.(xlm);
 
     try {
       const hash = await contribute(contractId, address, stroops, async (xdr) => {
@@ -103,6 +111,7 @@ export function PledgeModal({
       const msg = err instanceof Error ? err.message : "Transaction failed.";
       setErrorMessage(msg);
       setTxStatus("error");
+      onRollbackOptimistic?.();
       addToast(msg, "error");
     } finally {
       setPendingTx(false);
@@ -121,6 +130,30 @@ export function PledgeModal({
   };
 
   const isProcessing = txStatus !== "idle" || pendingTx || isSigning;
+
+  // Focus trap
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = dialogRef.current;
+    if (!el) return;
+    const focusable = el.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    first?.focus();
+    const trap = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      if (e.shiftKey ? document.activeElement === first : document.activeElement === last) {
+        e.preventDefault();
+        (e.shiftKey ? last : first)?.focus();
+      }
+    };
+    el.addEventListener("keydown", trap);
+    return () => el.removeEventListener("keydown", trap);
+  }, []);
+
+  const titleId = "pledge-modal-title";
 
   return (
     <div
@@ -189,7 +222,8 @@ export function PledgeModal({
             </button>
           </>
         )}
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
