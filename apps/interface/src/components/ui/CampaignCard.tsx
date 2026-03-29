@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CountdownTimer } from "@/components/ui/CountdownTimer";
 import { formatXlm } from "@/lib/price";
@@ -20,11 +21,12 @@ export interface CampaignCardProps {
 function StatusBadge({ status }: { status: "funded" | "ended" }) {
   return (
     <span
-      className={`absolute top-3 left-3 px-2 py-0.5 rounded-full text-xs font-semibold ${
+      className={cn(
+        "absolute top-3 left-3 px-2 py-0.5 rounded-full text-xs font-semibold",
         status === "funded"
           ? "bg-green-500/90 text-white"
           : "bg-gray-700/90 text-gray-300"
-      }`}
+      )}
     >
       {status === "funded" ? "Funded" : "Ended"}
     </span>

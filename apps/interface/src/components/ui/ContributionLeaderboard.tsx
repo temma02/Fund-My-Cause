@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { fetchContributorList, type ContributorEntry } from "@/lib/soroban";
 import { formatXLM, formatAddress } from "@/lib/format";
@@ -56,7 +57,10 @@ export function ContributionLeaderboard({ contractId, totalRaised, connectedAddr
             {rows.map((row) => (
               <tr
                 key={row.address}
-                className={`border-b border-gray-800 last:border-0 ${row.isYou ? "bg-indigo-950/40" : ""}`}
+                className={cn(
+                  "border-b border-gray-800 last:border-0",
+                  row.isYou && "bg-indigo-950/40"
+                )}
                 aria-current={row.isYou ? "true" : undefined}
               >
                 <td className="px-4 py-2 text-gray-400">{row.rank}</td>

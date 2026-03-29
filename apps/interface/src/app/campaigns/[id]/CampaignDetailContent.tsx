@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Loader2, Copy, Check, ExternalLink } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CountdownTimer } from "@/components/ui/CountdownTimer";
 import { ShareButton } from "@/components/ui/ShareButton";
@@ -32,7 +33,7 @@ function ContractIdRow({ contractId }: { contractId: string }) {
           className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800 transition"
         >
           {copied ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
-          <span className={copied ? "text-green-500" : ""}>{copied ? "Copied!" : "Copy"}</span>
+          <span className={cn(copied && "text-green-500")}>{copied ? "Copied!" : "Copy"}</span>
         </button>
         <a
           href={`https://stellar.expert/explorer/testnet/contract/${contractId}`}

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { cn } from "@/lib/utils";
 
 interface ProgressBarProps {
   progress: number; // 0–100
@@ -23,18 +24,21 @@ export function ProgressBar({ progress, animated = false }: ProgressBarProps) {
           className="w-full bg-gray-800 rounded-full h-2 relative overflow-hidden"
         >
           <div
-            className={`h-2 rounded-full transition-all duration-500 ${
-              isFunded ? "bg-green-500" : "bg-indigo-500"
-            } ${animated ? "animate-shimmer" : ""}`}
+            className={cn(
+              "h-2 rounded-full transition-all duration-500",
+              isFunded ? "bg-green-500" : "bg-indigo-500",
+              animated && "animate-shimmer"
+            )}
             style={{ width: `${clamped}%` }}
           />
           <div className="absolute right-0 top-0 h-full w-0.5 bg-gray-600 opacity-50" />
         </div>
       </div>
       <span
-        className={`text-sm font-medium min-w-[3rem] text-right ${
+        className={cn(
+          "text-sm font-medium min-w-[3rem] text-right",
           isFunded ? "text-green-400" : "text-indigo-400"
-        }`}
+        )}
         aria-hidden="true"
       >
         {Math.round(clamped)}%
