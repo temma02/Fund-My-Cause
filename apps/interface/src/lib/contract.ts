@@ -17,58 +17,12 @@ import {
 } from "@stellar/stellar-sdk";
 import { CONTRACT_ID, RPC_URL, NETWORK_PASSPHRASE, HORIZON_URL } from "@/lib/constants";
 import { isValidContractId } from "@/lib/validation";
+import type { SignFn } from "@/types/contract";
+import { ContractError } from "@/types/contract";
 
-/**
- * Wallet signing function type.
- * @typedef {Function} SignFn
- * @param {string} xdr - Transaction XDR to sign
- * @returns {Promise<string>} Signed transaction XDR
- */
-export type SignFn = (xdr: string) => Promise<string>;
-
-/**
- * Error thrown when a contract call fails.
- * @class ContractError
- * @extends {Error}
- */
-export class ContractError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "ContractError";
-  }
-}
-
-/**
- * High-level campaign metadata returned by the contract.
- * @interface CampaignInfo
- * @property {string} title - Campaign title
- * @property {string} description - Campaign description
- * @property {string} creator - Creator's Stellar public key
- * @property {bigint} goal - Goal amount in stroops (1 XLM = 10_000_000 stroops)
- * @property {bigint} deadline - Deadline as a Unix timestamp (seconds)
- * @property {bigint} minContribution - Minimum contribution in stroops
- */
-export interface CampaignInfo {
-  title: string;
-  description: string;
-  creator: string;
-  goal: bigint;
-  deadline: bigint;
-  minContribution: bigint;
-}
-
-/**
- * Live campaign statistics returned by get_stats.
- * @interface CampaignStats
- * @property {bigint} totalRaised - Total raised in stroops
- * @property {number} progressPercent - Progress as a percentage (progress_bps / 100)
- * @property {number} contributorCount - Number of unique contributors
- */
-export interface CampaignStats {
-  totalRaised: bigint;
-  progressPercent: number;
-  contributorCount: number;
-}
+// Re-export types for backward compatibility
+export type { SignFn } from "@/types/contract";
+export { ContractError } from "@/types/contract";
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 

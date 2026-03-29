@@ -13,6 +13,22 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 import { isValidContractId } from "@/lib/validation";
+import type {
+  CampaignStatus,
+  CampaignInfo,
+  CampaignStats,
+  CampaignData,
+  InitializeParams,
+} from "@/types/soroban";
+
+// Re-export types for backward compatibility
+export type {
+  CampaignStatus,
+  CampaignInfo,
+  CampaignStats,
+  CampaignData,
+  InitializeParams,
+} from "@/types/soroban";
 
 const SOROBAN_RPC_URL =
   process.env.NEXT_PUBLIC_SOROBAN_RPC_URL ??
@@ -35,63 +51,6 @@ const VALID_STATUSES = [
   "Cancelled",
   "Paused",
 ] as const;
-
-export type CampaignStatus = (typeof VALID_STATUSES)[number];
-
-export interface InitializeParams {
-  contractId: string;
-  creator: string;
-  token: string;
-  goal: bigint;
-  deadline: bigint;
-  minContribution: bigint;
-  title: string;
-  description: string;
-  socialLinks?: string[];
-  acceptedTokens?: string[];
-  platformFeeAddress?: string;
-  platformFeeBps?: number;
-}
-
-export interface CampaignInfo {
-  contractId: string;
-  creator: string;
-  token: string;
-  goal: bigint;
-  deadline: bigint;
-  minContribution: bigint;
-  title: string;
-  description: string;
-  status: CampaignStatus;
-  hasPlatformConfig: boolean;
-  platformFeeBps: number;
-  platformAddress: string;
-  socialLinks: string[];
-  acceptedTokens?: string[];
-}
-
-export interface CampaignStats {
-  totalRaised: bigint;
-  goal: bigint;
-  progressBps: number;
-  contributorCount: number;
-  averageContribution: bigint;
-  largestContribution: bigint;
-}
-
-export interface CampaignData {
-  contractId: string;
-  title: string;
-  description: string;
-  raised: number;
-  goal: number;
-  deadline: string;
-  creator: string;
-  socialLinks: string[];
-  contributorCount: number;
-  averageContribution: number;
-  status: CampaignStatus;
-}
 
 function toRecord(value: unknown): Record<string, unknown> {
   if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -327,6 +286,14 @@ export async function fetchAllCampaigns(): Promise<CampaignData[]> {
         result.status === "fulfilled",
     )
     .map((result) => result.value);
+}
+
+/**
+ * Returns all known campaign contract IDs for static generation.
+ * Used by Next.js generateStaticParams.
+ */
+export function getStaticCampaignIds(): string[] {
+  return [...CONTRACT_IDS];
 }
 
 export async function fetchCampaignData(
