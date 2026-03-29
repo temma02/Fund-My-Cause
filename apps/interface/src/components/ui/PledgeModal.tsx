@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useWallet } from "@/context/WalletContext";
 import { TransactionStatus, TxStatus } from "@/components/ui/TransactionStatus";
@@ -109,8 +110,20 @@ export function PledgeModal({
   const isProcessing = txStatus !== "idle" || pendingTx || isSigning;
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-2xl p-6 w-full max-w-md border border-gray-700 space-y-4">
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          className="bg-gray-900 rounded-2xl p-6 w-full max-w-md border border-gray-700 space-y-4"
+          initial={{ scale: 0.92, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.92, opacity: 0 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+        >
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Pledge to {campaignTitle}</h2>
           <button onClick={onClose} aria-label="Close" disabled={isProcessing}>
@@ -156,7 +169,8 @@ export function PledgeModal({
             </button>
           </>
         )}
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

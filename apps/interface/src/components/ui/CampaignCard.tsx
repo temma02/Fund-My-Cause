@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CountdownTimer } from "@/components/ui/CountdownTimer";
 import { formatXlm } from "@/lib/price";
@@ -12,6 +13,8 @@ export interface CampaignCardProps {
   onPledge?: (id: string) => void;
   /** Pass null when price fetch failed — USD amounts are hidden */
   xlmPrice?: number | null;
+  /** Stagger index for slide-up animation on listing page */
+  index?: number;
 }
 
 function StatusBadge({ status }: { status: "funded" | "ended" }) {
@@ -28,14 +31,20 @@ function StatusBadge({ status }: { status: "funded" | "ended" }) {
   );
 }
 
-export function CampaignCard({ campaign, onPledge, xlmPrice = null }: CampaignCardProps) {
+export function CampaignCard({ campaign, onPledge, xlmPrice = null, index = 0 }: CampaignCardProps) {
   const progress = campaign.goal > 0 ? (campaign.raised / campaign.goal) * 100 : 0;
   const isFunded = progress >= 100;
   const isEnded = !isFunded && new Date(campaign.deadline) < new Date();
   const isDisabled = isFunded || isEnded;
 
   return (
-    <div className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800">
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.07, ease: "easeOut" }}
+      whileHover={{ scale: 1.02, boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}
+      className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800"
+    >
       <div className="relative">
         <div className="relative w-full h-48">
           <Image
@@ -66,6 +75,6 @@ export function CampaignCard({ campaign, onPledge, xlmPrice = null }: CampaignCa
           {isFunded ? "Successfully Funded" : isEnded ? "Campaign Ended" : "Pledge Now"}
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
