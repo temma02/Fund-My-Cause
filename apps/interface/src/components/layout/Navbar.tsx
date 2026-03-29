@@ -21,7 +21,7 @@ export function Navbar() {
 
   return (
     <div>
-    <nav className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+    <nav aria-label="Main navigation" className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
       <div className="flex items-center gap-2 font-bold text-lg">
         <Rocket className="text-indigo-500 dark:text-indigo-400" size={20} />
         <span className="hidden sm:inline">Fund-My-Cause</span>
@@ -38,16 +38,17 @@ export function Navbar() {
               aria-label="Disconnect wallet"
               className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
             >
-              <LogOut size={16} /> Disconnect
+              <LogOut size={16} aria-hidden="true" /> Disconnect
             </button>
           </div>
         ) : (
           <button
             onClick={connect}
             disabled={isConnecting}
+            aria-label="Connect wallet"
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm font-medium text-white transition disabled:opacity-50"
           >
-            {isConnecting ? <Loader2 size={16} className="animate-spin" /> : <Wallet size={16} />}
+            {isConnecting ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Wallet size={16} aria-hidden="true" />}
             Connect Wallet
           </button>
         )}
@@ -67,39 +68,41 @@ export function Navbar() {
           className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
           aria-label="Toggle theme"
         >
-          {theme === "dark" ? <Sun size={18} className="text-yellow-500" /> : <Moon size={18} className="text-indigo-600" />}
+          {theme === "dark" ? <Sun size={18} className="text-yellow-500" aria-hidden="true" /> : <Moon size={18} className="text-indigo-600" aria-hidden="true" />}
         </button>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-          aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileMenuOpen}
         >
-          {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          {mobileMenuOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
         </button>
       </div>
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="absolute top-16 left-0 right-0 md:hidden bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 px-4 py-4 space-y-4 z-50">
-          {error && <span className="text-red-500 dark:text-red-400 text-sm">{error}</span>}
+          {error && <span className="text-red-500 dark:text-red-400 text-sm" role="alert">{error}</span>}
           {address ? (
             <div className="space-y-3">
               <span className="text-sm text-gray-600 dark:text-gray-300 block">{addressLabel}</span>
               <button
                 onClick={() => { disconnect(); setMobileMenuOpen(false); }}
+                aria-label="Disconnect wallet"
                 className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition w-full"
               >
-                <LogOut size={16} /> Disconnect
+                <LogOut size={16} aria-hidden="true" /> Disconnect
               </button>
             </div>
           ) : (
             <button
               onClick={() => { connect(); setMobileMenuOpen(false); }}
               disabled={isConnecting}
+              aria-label="Connect wallet"
               className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm font-medium text-white transition disabled:opacity-50 w-full"
             >
-              {isConnecting ? <Loader2 size={16} className="animate-spin" /> : <Wallet size={16} />}
+              {isConnecting ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Wallet size={16} aria-hidden="true" />}
               Connect Wallet
             </button>
           )}

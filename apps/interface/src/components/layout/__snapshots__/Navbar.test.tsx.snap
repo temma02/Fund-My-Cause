@@ -4,6 +4,7 @@ exports[`Navbar snapshots matches snapshot in connected state 1`] = `
 <DocumentFragment>
   <div>
     <nav
+      aria-label="Main navigation"
       class="flex items-center justify-between px-4 md:px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950"
     >
       <div
@@ -53,6 +54,7 @@ exports[`Navbar snapshots matches snapshot in connected state 1`] = `
             GABCD...WXYZ · 42.50 XLM
           </span>
           <button
+            aria-label="Disconnect wallet"
             class="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
           >
             <svg
@@ -182,7 +184,8 @@ exports[`Navbar snapshots matches snapshot in connected state 1`] = `
           </svg>
         </button>
         <button
-          aria-label="Toggle menu"
+          aria-expanded="false"
+          aria-label="Open menu"
           class="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
         >
           <svg
@@ -219,6 +222,7 @@ exports[`Navbar snapshots matches snapshot in disconnected state 1`] = `
 <DocumentFragment>
   <div>
     <nav
+      aria-label="Main navigation"
       class="flex items-center justify-between px-4 md:px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950"
     >
       <div
@@ -260,6 +264,7 @@ exports[`Navbar snapshots matches snapshot in disconnected state 1`] = `
         class="hidden md:flex items-center gap-3"
       >
         <button
+          aria-label="Connect wallet"
           class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm font-medium text-white transition disabled:opacity-50"
         >
           <svg
@@ -385,7 +390,8 @@ exports[`Navbar snapshots matches snapshot in disconnected state 1`] = `
           </svg>
         </button>
         <button
-          aria-label="Toggle menu"
+          aria-expanded="false"
+          aria-label="Open menu"
           class="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
         >
           <svg

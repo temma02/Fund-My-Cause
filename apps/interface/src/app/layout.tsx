@@ -3,6 +3,7 @@ import "./globals.css";
 import { WalletProvider } from "@/context/WalletContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { ReactQueryProvider } from "@/context/ReactQueryProvider";
 import { PageTransition } from "@/components/layout/PageTransition";
 
 export const metadata: Metadata = {
@@ -16,9 +17,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ThemeProvider>
           <ToastProvider>
-            <WalletProvider>
-              <PageTransition>{children}</PageTransition>
-            </WalletProvider>
+            <ReactQueryProvider>
+              <WalletProvider>{children}</WalletProvider>
+            </ReactQueryProvider>
           </ToastProvider>
         </ThemeProvider>
       </body>

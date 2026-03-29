@@ -71,7 +71,7 @@ describe("PledgeModal", () => {
   it("calls onClose when the close button is clicked", () => {
     const onClose = jest.fn();
     renderModal(onClose);
-    fireEvent.click(screen.getByLabelText("Close"));
+    fireEvent.click(screen.getByLabelText("Close pledge modal"));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 

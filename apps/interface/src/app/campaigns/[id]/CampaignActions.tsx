@@ -199,7 +199,7 @@ export function CampaignActions({
           <button
             onClick={handleWithdraw}
             disabled={isProcessing}
-            aria-label="Withdraw campaign funds to your wallet"
+            aria-label="Withdraw campaign funds"
             className="w-full py-3 rounded-xl font-medium bg-green-600 hover:bg-green-500 transition text-white disabled:opacity-50"
           >
             Withdraw Funds

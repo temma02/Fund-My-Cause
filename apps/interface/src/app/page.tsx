@@ -5,8 +5,16 @@ import { Navbar } from "@/components/layout/Navbar";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CountdownTimer } from "@/components/ui/CountdownTimer";
 import { Rocket, Users, Coins, ArrowRight, PlusCircle } from "lucide-react";
+import { formatTimeLeft } from "@/lib/format";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
+
+// Featured campaign IDs from env var (comma-separated contract IDs).
+// Falls back to hardcoded demo data when not set.
+const FEATURED_IDS = (process.env.NEXT_PUBLIC_FEATURED_CAMPAIGNS ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 
 const FEATURED = [
   {
@@ -17,6 +25,7 @@ const FEATURED = [
     goal: 20000,
     deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
     image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=800",
+    featured: true,
   },
   {
     id: "2",
@@ -26,6 +35,7 @@ const FEATURED = [
     goal: 50000,
     deadline: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString(),
     image: "https://images.unsplash.com/photo-1555949963-aa79dcee5789?auto=format&fit=crop&q=80&w=800",
+    featured: true,
   },
   {
     id: "3",
@@ -35,6 +45,7 @@ const FEATURED = [
     goal: 45000,
     deadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
     image: "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&q=80&w=800",
+    featured: true,
   },
 ];
 
@@ -121,17 +132,16 @@ export default function Home() {
           {FEATURED.map((c) => {
             const progress = (c.raised / c.goal) * 100;
             const isFunded = progress >= 100;
+            const deadlineSecs = Math.floor(new Date(c.deadline).getTime() / 1000);
             return (
-              <div key={c.id} className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800">
-                <div className="relative w-full h-48">
-                  <Image
-                    src={c.image}
-                    alt={c.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                  />
-                </div>
+              <div key={c.id} className="relative bg-gray-900 rounded-2xl overflow-hidden border border-gray-800">
+                {c.featured && (
+                  <span className="absolute top-3 left-3 z-10 flex items-center gap-1 bg-yellow-500/90 text-yellow-950 text-xs font-semibold px-2 py-0.5 rounded-full">
+                    ⭐ Featured
+                  </span>
+                )}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={c.image} alt={c.title} className="w-full h-48 object-cover" />
                 <div className="p-5 space-y-3">
                   <h3 className="text-base font-semibold">{c.title}</h3>
                   <p className="text-gray-400 text-sm">{c.description}</p>
@@ -140,7 +150,7 @@ export default function Home() {
                     <span>{c.raised.toLocaleString()} XLM raised</span>
                     <span>{c.goal.toLocaleString()} XLM goal</span>
                   </div>
-                  <CountdownTimer deadline={c.deadline} />
+                  <p className="text-xs text-gray-500">{formatTimeLeft(deadlineSecs)} left</p>
                   <Link
                     href={`/campaigns`}
                     className="block w-full py-2 rounded-xl font-medium text-center bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition"

@@ -18,6 +18,7 @@ import {
   type CampaignStats,
   type CampaignStatus,
 } from "@/lib/soroban";
+import { formatXLM } from "@/lib/format";
 
 const REGISTRY_KEY = "fmc:campaigns";
 
@@ -33,9 +34,7 @@ function getContractIds(address: string): string[] {
 }
 
 function formatXlm(value: bigint) {
-  return (Number(value) / 10_000_000).toLocaleString(undefined, {
-    maximumFractionDigits: 2,
-  });
+  return formatXLM(value);
 }
 
 const STATUS_STYLES: Record<CampaignStatus, string> = {

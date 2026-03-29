@@ -44,61 +44,38 @@ export function PledgeModal({
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [pendingTx, setPendingTx] = useState(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const triggerRef = useRef<Element | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = "pledge-modal-title";
 
-  // Store the element that opened the modal so focus can be returned on close
-  React.useEffect(() => {
-    triggerRef.current = document.activeElement;
-    return () => {
-      (triggerRef.current as HTMLElement | null)?.focus();
-    };
-  }, []);
-
-  // Close on Escape
-  React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !isProcessing) onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onClose]);
-
-  // Trap focus inside dialog
-  React.useEffect(() => {
+  // Focus trap
+  useEffect(() => {
     const el = dialogRef.current;
     if (!el) return;
     const focusable = el.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
-    if (focusable.length) focusable[0].focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Tab" || !focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    first?.focus();
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") { onClose(); return; }
+      if (e.key !== "Tab") return;
       if (e.shiftKey) {
-        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        if (document.activeElement === first) { e.preventDefault(); last?.focus(); }
       } else {
-        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+        if (document.activeElement === last) { e.preventDefault(); first?.focus(); }
       }
-    };
-    el.addEventListener("keydown", onKey);
-    return () => el.removeEventListener("keydown", onKey);
-  }, []);
+    }
+    el.addEventListener("keydown", handleKeyDown);
+    return () => el.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   const minXlm = Number(minContribution) / 1e7;
 
   const handlePledge = async () => {
-    if (!address) {
-      await connect();
-      return;
-    }
-
-    // Prevent double-submission with debounce
-    if (pendingTx) {
-      return;
-    }
+    if (!address) { await connect(); return; }
+    if (pendingTx) return;
 
     const xlm = parseFloat(amount);
     if (!amount || isNaN(xlm) || xlm <= 0) {
@@ -126,7 +103,6 @@ export function PledgeModal({
       });
 
       setTxStatus("confirming");
-      // contribute() already polls — by the time it resolves we're confirmed
       setTxHash(hash);
       setTxStatus("success");
       addToast("Pledge submitted successfully!", "success", hash);
@@ -143,12 +119,8 @@ export function PledgeModal({
   };
 
   const handlePledgeWithDebounce = () => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-    debounceTimerRef.current = setTimeout(() => {
-      handlePledge();
-    }, PLEDGE_DEBOUNCE_MS);
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(handlePledge, PLEDGE_DEBOUNCE_MS);
   };
 
   const handleDismiss = () => {
@@ -184,24 +156,25 @@ export function PledgeModal({
   const titleId = "pledge-modal-title";
 
   return (
-    <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+    <div
+      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+      aria-modal="true"
+      onClick={(e) => { if (e.target === e.currentTarget && !isProcessing) onClose(); }}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-labelledby={titleId}
+        className="bg-gray-900 rounded-2xl p-6 w-full max-w-md border border-gray-700 space-y-4"
       >
-        <motion.div
-          className="bg-gray-900 rounded-2xl p-6 w-full max-w-md border border-gray-700 space-y-4"
-          initial={{ scale: 0.92, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.92, opacity: 0 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
-        >
         <div className="flex justify-between items-center">
-          <h2 id="pledge-modal-title" className="text-lg font-semibold">Pledge to {campaignTitle}</h2>
-          <button onClick={onClose} aria-label="Close" disabled={isProcessing}>
-            <X size={20} />
+          <h2 id={titleId} className="text-lg font-semibold">Pledge to {campaignTitle}</h2>
+          <button
+            onClick={onClose}
+            aria-label="Close pledge modal"
+            disabled={isProcessing}
+          >
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
 
@@ -216,12 +189,12 @@ export function PledgeModal({
           <>
             <div className="space-y-1">
               {address && !accountLoading && !accountExists && (
-                <p className="text-xs text-yellow-400">
+                <p className="text-xs text-yellow-400" role="alert">
                   ⚠️ This account is not funded on the network. Your transaction will fail.
                 </p>
               )}
               <label htmlFor="pledge-amount" className="sr-only">
-                Amount in XLM (minimum {minXlm} XLM)
+                Amount in XLM (minimum {minXlm})
               </label>
               <input
                 id="pledge-amount"
@@ -232,7 +205,7 @@ export function PledgeModal({
                 step="0.1"
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
                 disabled={isProcessing}
-                aria-label={`Amount in XLM, minimum ${minXlm} XLM`}
+                aria-label={`Amount in XLM, minimum ${minXlm}`}
                 className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-white placeholder-gray-500 focus:outline-none disabled:opacity-50"
               />
               {minContribution > XLM_TO_STROOPS && (
@@ -242,6 +215,7 @@ export function PledgeModal({
             <button
               onClick={handlePledgeWithDebounce}
               disabled={isProcessing}
+              aria-label={address ? `Confirm pledge to ${campaignTitle}` : "Connect wallet to pledge"}
               className="w-full bg-indigo-600 hover:bg-indigo-500 py-2 rounded-xl font-medium transition disabled:opacity-50"
             >
               {address ? "Confirm Pledge" : "Connect Wallet to Pledge"}
