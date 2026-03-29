@@ -37,6 +37,48 @@ export function PledgeModal({
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [pendingTx, setPendingTx] = useState(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const triggerRef = useRef<Element | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Store the element that opened the modal so focus can be returned on close
+  React.useEffect(() => {
+    triggerRef.current = document.activeElement;
+    return () => {
+      (triggerRef.current as HTMLElement | null)?.focus();
+    };
+  }, []);
+
+  // Close on Escape
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isProcessing) onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onClose]);
+
+  // Trap focus inside dialog
+  React.useEffect(() => {
+    const el = dialogRef.current;
+    if (!el) return;
+    const focusable = el.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    );
+    if (focusable.length) focusable[0].focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Tab" || !focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    el.addEventListener("keydown", onKey);
+    return () => el.removeEventListener("keydown", onKey);
+  }, []);
 
   const minXlm = Number(minContribution) / 1e7;
 
@@ -110,9 +152,15 @@ export function PledgeModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-2xl p-6 w-full max-w-md border border-gray-700 space-y-4">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pledge-modal-title"
+        className="bg-gray-900 rounded-2xl p-6 w-full max-w-md border border-gray-700 space-y-4"
+      >
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Pledge to {campaignTitle}</h2>
+          <h2 id="pledge-modal-title" className="text-lg font-semibold">Pledge to {campaignTitle}</h2>
           <button onClick={onClose} aria-label="Close" disabled={isProcessing}>
             <X size={20} />
           </button>

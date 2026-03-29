@@ -34,7 +34,18 @@ export function CampaignCard({ campaign, onPledge, xlmPrice = null }: CampaignCa
   const isDisabled = isFunded || isEnded;
 
   return (
-    <div className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800">
+    <div
+      className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 focus-within:ring-2 focus-within:ring-indigo-500"
+      tabIndex={0}
+      role="article"
+      aria-label={campaign.title}
+      onKeyDown={(e) => {
+        if ((e.key === "Enter" || e.key === " ") && !isDisabled) {
+          e.preventDefault();
+          onPledge?.(campaign.id);
+        }
+      }}
+    >
       <div className="relative">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={campaign.image} alt={campaign.title} className="w-full h-48 object-cover" />
