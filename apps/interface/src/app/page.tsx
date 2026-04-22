@@ -25,7 +25,8 @@ const FEATURED = [
   {
     id: "1",
     title: "Eco-Friendly Water Purification",
-    description: "A compact, solar-powered water purification system for off-grid communities.",
+    description:
+      "A compact, solar-powered water purification system for off-grid communities.",
     raised: 15400,
     goal: 20000,
     deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
@@ -35,7 +36,8 @@ const FEATURED = [
   {
     id: "2",
     title: "Open Source AI Education Platform",
-    description: "Democratizing AI education with free, high-quality interactive courses for everyone.",
+    description:
+      "Democratizing AI education with free, high-quality interactive courses for everyone.",
     raised: 8200,
     goal: 50000,
     deadline: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString(),
@@ -45,7 +47,8 @@ const FEATURED = [
   {
     id: "3",
     title: "Community Solar Microgrid",
-    description: "Empowering neighborhoods to generate and share sustainable solar energy.",
+    description:
+      "Empowering neighborhoods to generate and share sustainable solar energy.",
     raised: 45000,
     goal: 45000,
     deadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
@@ -64,17 +67,20 @@ const HOW_IT_WORKS = [
   {
     step: 1,
     title: "Create",
-    description: "Deploy a campaign on-chain with your goal, deadline, and token in minutes.",
+    description:
+      "Deploy a campaign on-chain with your goal, deadline, and token in minutes.",
   },
   {
     step: 2,
     title: "Fund",
-    description: "Contributors pledge XLM or any Stellar token before the deadline.",
+    description:
+      "Contributors pledge XLM or any Stellar token before the deadline.",
   },
   {
     step: 3,
     title: "Withdraw or Refund",
-    description: "Goal met? Withdraw funds. Goal missed? Contributors claim refunds automatically.",
+    description:
+      "Goal met? Withdraw funds. Goal missed? Contributors claim refunds automatically.",
   },
 ];
 
@@ -91,10 +97,13 @@ export default function Home() {
           <Rocket size={12} /> Built on Stellar · Powered by Soroban
         </div>
         <h1 className="text-5xl sm:text-6xl font-bold leading-tight mb-5">
-          Fund the Future,<br />On-Chain.
+          Fund the Future,
+          <br />
+          On-Chain.
         </h1>
         <p className="text-gray-400 text-lg max-w-xl mx-auto mb-8">
-          Create or support campaigns with lightning-fast, trustless transactions on the Stellar network.
+          Create or support campaigns with lightning-fast, trustless
+          transactions on the Stellar network.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
           <Link
@@ -129,7 +138,10 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-6 py-16">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Featured Campaigns</h2>
-          <Link href="/campaigns" className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition">
+          <Link
+            href="/campaigns"
+            className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition"
+          >
             View all <ArrowRight size={14} />
           </Link>
         </div>
@@ -137,16 +149,25 @@ export default function Home() {
           {FEATURED.map((c) => {
             const progress = (c.raised / c.goal) * 100;
             const isFunded = progress >= 100;
-            const deadlineSecs = Math.floor(new Date(c.deadline).getTime() / 1000);
+            const deadlineSecs = Math.floor(
+              new Date(c.deadline).getTime() / 1000,
+            );
             return (
-              <div key={c.id} className="relative bg-gray-900 rounded-2xl overflow-hidden border border-gray-800">
+              <div
+                key={c.id}
+                className="relative bg-gray-900 rounded-2xl overflow-hidden border border-gray-800"
+              >
                 {c.featured && (
                   <span className="absolute top-3 left-3 z-10 flex items-center gap-1 bg-yellow-500/90 text-yellow-950 text-xs font-semibold px-2 py-0.5 rounded-full">
                     ⭐ Featured
                   </span>
                 )}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={c.image} alt={c.title} className="w-full h-48 object-cover" />
+                <img
+                  src={c.image}
+                  alt={c.title}
+                  className="w-full h-48 object-cover"
+                />
                 <div className="p-5 space-y-3">
                   <h3 className="text-base font-semibold">{c.title}</h3>
                   <p className="text-gray-400 text-sm">{c.description}</p>
@@ -155,7 +176,9 @@ export default function Home() {
                     <span>{c.raised.toLocaleString()} XLM raised</span>
                     <span>{c.goal.toLocaleString()} XLM goal</span>
                   </div>
-                  <p className="text-xs text-gray-500">{formatTimeLeft(deadlineSecs)} left</p>
+                  <p className="text-xs text-gray-500">
+                    {formatTimeLeft(deadlineSecs)} left
+                  </p>
                   <Link
                     href={`/campaigns`}
                     className="block w-full py-2 rounded-xl font-medium text-center bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition"
@@ -194,10 +217,23 @@ export default function Home() {
             <Rocket size={16} className="text-indigo-400" /> Fund-My-Cause
           </div>
           <div className="flex gap-5">
-            <Link href="/campaigns" className="hover:text-white transition">Campaigns</Link>
-            <Link href="/create" className="hover:text-white transition">Create</Link>
-            <Link href="/dashboard" className="hover:text-white transition">Dashboard</Link>
-            <a href="https://developers.stellar.org" target="_blank" rel="noreferrer" className="hover:text-white transition">Stellar Docs</a>
+            <Link href="/campaigns" className="hover:text-white transition">
+              Campaigns
+            </Link>
+            <Link href="/create" className="hover:text-white transition">
+              Create
+            </Link>
+            <Link href="/dashboard" className="hover:text-white transition">
+              Dashboard
+            </Link>
+            <a
+              href="https://developers.stellar.org"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-white transition"
+            >
+              Stellar Docs
+            </a>
           </div>
           <span>MIT License · Built on Stellar</span>
         </div>
