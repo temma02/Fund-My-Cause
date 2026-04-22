@@ -144,8 +144,10 @@ This project uses [Husky](https://typicode.github.io/husky/) and [lint-staged](h
 
 Pre-commit hooks automatically run the following checks on staged files:
 
-- **TypeScript/JavaScript files** (`.ts`, `.tsx`): ESLint linting and Prettier formatting
+- **TypeScript/JavaScript files** (`.ts`, `.tsx`): Prettier formatting
 - **Rust files** (`.rs`): `cargo fmt --check` for formatting and `cargo clippy` for linting
+
+Note: ESLint checks are planned but require configuration updates for ESLint v9 compatibility.
 
 ### Setup
 
