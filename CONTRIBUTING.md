@@ -136,6 +136,39 @@ vitest -u
 
 Commit updated snapshot files alongside your component changes so reviewers can see the visual diff.
 
+## Pre-commit Hooks
+
+This project uses [Husky](https://typicode.github.io/husky/) and [lint-staged](https://github.com/okonet/lint-staged) to enforce code quality before commits.
+
+### Automatic Checks
+
+Pre-commit hooks automatically run the following checks on staged files:
+
+- **TypeScript/JavaScript files** (`.ts`, `.tsx`): Prettier formatting
+- **Rust files** (`.rs`): `cargo fmt --check` for formatting and `cargo clippy` for linting
+
+Note: ESLint checks are planned but require configuration updates for ESLint v9 compatibility.
+
+### Setup
+
+Pre-commit hooks are automatically installed when you run `npm install` (via the `prepare` script).
+
+If you need to manually install or update hooks:
+
+```bash
+npm run prepare
+```
+
+### Skipping Hooks
+
+In rare cases, you can skip pre-commit hooks with:
+
+```bash
+git commit --no-verify
+```
+
+Use this sparingly and ensure checks pass before pushing.
+
 ## Development Setup
 
 ### Quick Start

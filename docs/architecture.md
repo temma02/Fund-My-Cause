@@ -8,36 +8,7 @@ Fund-My-Cause is a decentralized crowdfunding platform built on the Stellar netw
 
 ### Architecture Diagram
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Frontend (Next.js)                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │   Navbar     │  │  Campaign    │  │  Pledge Modal        │  │
-│  │  (Connect)   │  │  List View   │  │  (Contribute)        │  │
-│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
-│         │                  │                      │              │
-│         └──────────────────┼──────────────────────┘              │
-│                            │                                     │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │              WalletContext (Freighter)                     │ │
-│  │  - address, connect, disconnect, signTx                   │ │
-│  └────────────────────────────────────────────────────────────┘ │
-│                            │                                     │
-└────────────────────────────┼─────────────────────────────────────┘
-                             │
-                    ┌────────▼────────┐
-                    │  Soroban RPC    │
-                    │  (Testnet/      │
-                    │   Mainnet)      │
-                    └────────┬────────┘
-                             │
-        ┌────────────────────┼────────────────────┐
-        │                    │                    │
-   ┌────▼────┐         ┌─────▼──────┐      ┌─────▼──────┐
-   │Crowdfund │         │  Registry  │      │   Token    │
-   │ Contract │         │  Contract  │      │  Contract  │
-   └──────────┘         └────────────┘      └────────────┘
-```
+![System Architecture](./assets/architecture.svg)
 
 ## Smart Contract Data Model
 

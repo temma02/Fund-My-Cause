@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" font-family="monospace, sans-serif" font-size="13">
+  <!-- Background -->
+  <rect width="900" height="720" fill="#0f172a"/>
+
+  <!-- ── FRONTEND LAYER ── -->
+  <rect x="30" y="20" width="840" height="180" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="50" y="44" fill="#38bdf8" font-size="12" font-weight="bold">FRONTEND  ·  Next.js 16 (TypeScript + Tailwind)</text>
+
+  <!-- Navbar -->
+  <rect x="55" y="58" width="160" height="60" rx="6" fill="#0f172a" stroke="#64748b" stroke-width="1"/>
+  <text x="135" y="83" fill="#94a3b8" text-anchor="middle" font-size="11">Navbar</text>
+  <text x="135" y="100" fill="#64748b" text-anchor="middle" font-size="10">Freighter connect</text>
+
+  <!-- ProgressBar -->
+  <rect x="240" y="58" width="160" height="60" rx="6" fill="#0f172a" stroke="#64748b" stroke-width="1"/>
+  <text x="320" y="83" fill="#94a3b8" text-anchor="middle" font-size="11">ProgressBar</text>
+  <text x="320" y="100" fill="#64748b" text-anchor="middle" font-size="10">Campaign progress</text>
+
+  <!-- PledgeModal -->
+  <rect x="425" y="58" width="160" height="60" rx="6" fill="#0f172a" stroke="#64748b" stroke-width="1"/>
+  <text x="505" y="83" fill="#94a3b8" text-anchor="middle" font-size="11">PledgeModal</text>
+  <text x="505" y="100" fill="#64748b" text-anchor="middle" font-size="10">Contribution flow</text>
+
+  <!-- CountdownTimer -->
+  <rect x="610" y="58" width="160" height="60" rx="6" fill="#0f172a" stroke="#64748b" stroke-width="1"/>
+  <text x="690" y="83" fill="#94a3b8" text-anchor="middle" font-size="11">CountdownTimer</text>
+  <text x="690" y="100" fill="#64748b" text-anchor="middle" font-size="10">Deadline display</text>
+
+  <!-- WalletContext -->
+  <rect x="240" y="140" width="420" height="46" rx="6" fill="#0f172a" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="450" y="159" fill="#a78bfa" text-anchor="middle" font-size="11" font-weight="bold">WalletContext  (Freighter API)</text>
+  <text x="450" y="176" fill="#64748b" text-anchor="middle" font-size="10">address · connect() · disconnect() · signTx()</text>
+
+  <!-- connector lines: components → WalletContext -->
+  <line x1="135" y1="118" x2="135" y2="163" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="135" y1="163" x2="240" y2="163" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="320" y1="118" x2="320" y2="140" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="505" y1="118" x2="505" y2="140" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="690" y1="118" x2="690" y2="163" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="690" y1="163" x2="660" y2="163" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- ── ARROW: Frontend → RPC ── -->
+  <line x1="450" y1="200" x2="450" y2="248" stroke="#38bdf8" stroke-width="1.5"/>
+  <polygon points="450,252 445,242 455,242" fill="#38bdf8"/>
+  <text x="460" y="230" fill="#38bdf8" font-size="10">sign &amp; submit XDR</text>
+
+  <!-- ── RPC LAYER ── -->
+  <rect x="270" y="252" width="360" height="64" rx="10" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.5"/>
+  <text x="450" y="276" fill="#0ea5e9" text-anchor="middle" font-size="12" font-weight="bold">Stellar Soroban RPC</text>
+  <text x="450" y="295" fill="#64748b" text-anchor="middle" font-size="10">https://soroban-testnet.stellar.org</text>
+  <text x="450" y="309" fill="#64748b" text-anchor="middle" font-size="10">simulate · submit · poll</text>
+
+  <!-- ── ARROW: RPC → Contracts ── -->
+  <line x1="450" y1="316" x2="450" y2="364" stroke="#0ea5e9" stroke-width="1.5"/>
+  <polygon points="450,368 445,358 455,358" fill="#0ea5e9"/>
+  <text x="460" y="346" fill="#0ea5e9" font-size="10">invoke contracts</text>
+
+  <!-- ── CONTRACTS LAYER ── -->
+  <rect x="30" y="368" width="840" height="170" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+  <text x="50" y="392" fill="#10b981" font-size="12" font-weight="bold">SOROBAN SMART CONTRACTS</text>
+
+  <!-- Crowdfund Contract -->
+  <rect x="55" y="404" width="340" height="118" rx="6" fill="#0f172a" stroke="#10b981" stroke-width="1"/>
+  <text x="225" y="424" fill="#10b981" text-anchor="middle" font-size="11" font-weight="bold">Crowdfund Contract</text>
+  <text x="75" y="444" fill="#94a3b8" font-size="10">initialize()   contribute()   withdraw()</text>
+  <text x="75" y="460" fill="#94a3b8" font-size="10">refund_single()   update_metadata()</text>
+  <text x="75" y="476" fill="#94a3b8" font-size="10">get_stats()   total_raised()   goal()</text>
+  <text x="75" y="492" fill="#94a3b8" font-size="10">deadline()   contribution()   version()</text>
+  <text x="75" y="510" fill="#64748b" font-size="10">Platform fee · Pull-based refunds · Status FSM</text>
+
+  <!-- Registry Contract -->
+  <rect x="420" y="404" width="240" height="118" rx="6" fill="#0f172a" stroke="#10b981" stroke-width="1"/>
+  <text x="540" y="424" fill="#10b981" text-anchor="middle" font-size="11" font-weight="bold">Registry Contract</text>
+  <text x="440" y="444" fill="#94a3b8" font-size="10">register(campaign_id)</text>
+  <text x="440" y="460" fill="#94a3b8" font-size="10">list_campaigns(offset, limit)</text>
+  <text x="440" y="476" fill="#94a3b8" font-size="10">get_campaign_count()</text>
+  <text x="440" y="500" fill="#64748b" font-size="10">Campaign discovery &amp; pagination</text>
+
+  <!-- Token Contract -->
+  <rect x="685" y="404" width="165" height="118" rx="6" fill="#0f172a" stroke="#f59e0b" stroke-width="1"/>
+  <text x="767" y="424" fill="#f59e0b" text-anchor="middle" font-size="11" font-weight="bold">Token Contract</text>
+  <text x="700" y="444" fill="#94a3b8" font-size="10">transfer()</text>
+  <text x="700" y="460" fill="#94a3b8" font-size="10">balance()</text>
+  <text x="700" y="476" fill="#94a3b8" font-size="10">XLM / SAC</text>
+  <text x="700" y="500" fill="#64748b" font-size="10">SEP-41 token</text>
+
+  <!-- ── ARROW: Contracts → Ledger ── -->
+  <line x1="450" y1="538" x2="450" y2="586" stroke="#10b981" stroke-width="1.5"/>
+  <polygon points="450,590 445,580 455,580" fill="#10b981"/>
+  <text x="460" y="568" fill="#10b981" font-size="10">store state</text>
+
+  <!-- ── LEDGER LAYER ── -->
+  <rect x="270" y="590" width="360" height="64" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="450" y="614" fill="#f59e0b" text-anchor="middle" font-size="12" font-weight="bold">Stellar Ledger</text>
+  <text x="450" y="633" fill="#64748b" text-anchor="middle" font-size="10">Instance storage · Persistent storage (TTL)</text>
+  <text x="450" y="648" fill="#64748b" text-anchor="middle" font-size="10">5-second finality · Immutable history</text>
+
+  <!-- ── DATA FLOW LEGEND ── -->
+  <rect x="30" y="668" width="840" height="42" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="50" y="684" fill="#64748b" font-size="10" font-weight="bold">DATA FLOWS:</text>
+  <!-- initialize -->
+  <rect x="140" y="672" width="8" height="8" rx="2" fill="#a78bfa"/>
+  <text x="154" y="682" fill="#94a3b8" font-size="10">initialize</text>
+  <!-- contribute -->
+  <rect x="230" y="672" width="8" height="8" rx="2" fill="#38bdf8"/>
+  <text x="244" y="682" fill="#94a3b8" font-size="10">contribute</text>
+  <!-- withdraw -->
+  <rect x="320" y="672" width="8" height="8" rx="2" fill="#10b981"/>
+  <text x="334" y="682" fill="#94a3b8" font-size="10">withdraw</text>
+  <!-- refund -->
+  <rect x="410" y="672" width="8" height="8" rx="2" fill="#f59e0b"/>
+  <text x="424" y="682" fill="#94a3b8" font-size="10">refund</text>
+
+  <!-- second row of legend -->
+  <text x="50" y="702" fill="#64748b" font-size="10" font-weight="bold">KEY:</text>
+  <line x1="90" y1="698" x2="115" y2="698" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="120" y="702" fill="#94a3b8" font-size="10">signed XDR / RPC call</text>
+  <line x1="250" y1="698" x2="275" y2="698" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="280" y="702" fill="#94a3b8" font-size="10">internal wiring</text>
+  <line x1="380" y1="698" x2="405" y2="698" stroke="#10b981" stroke-width="1.5"/>
+  <text x="410" y="702" fill="#94a3b8" font-size="10">contract invocation / ledger write</text>
+</svg>

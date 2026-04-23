@@ -11,45 +11,9 @@ A decentralized crowdfunding platform built on the [Stellar](https://stellar.org
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Next.js Frontend (TypeScript)               │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │   Navbar     │  │ ProgressBar  │  │  PledgeModal         │  │
-│  │ (Freighter)  │  │ (Campaign)   │  │  (Contribution)      │  │
-│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
-│         │                 │                      │              │
-│         └─────────────────┴──────────────────────┘              │
-│                           │                                     │
-│                    WalletContext                                │
-│                  (Freighter API)                                │
-└─────────────────────────────────────────────────────────────────┘
-                            │
-                            │ (sign transactions)
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Stellar RPC Endpoint                         │
-│              (Testnet: https://soroban-testnet.stellar.org)     │
-└─────────────────────────────────────────────────────────────────┘
-                            │
-                            │ (invoke contracts)
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   Soroban Smart Contracts                       │
-│  ┌──────────────────────┐  ┌──────────────────────────────────┐ │
-│  │  Crowdfund Contract  │  │  Registry Contract               │ │
-│  │  - initialize()      │  │  - register(campaign_id)         │ │
-│  │  - contribute()      │  │  - list_campaigns()              │ │
-│  │  - withdraw()        │  │  - get_campaign_count()          │ │
-│  │  - refund_single()   │  │                                  │ │
-│  │  - get_stats()       │  │                                  │ │
-│  └──────────────────────┘  └──────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
-                            │
-                            │ (store state)
-                            ▼
-                    Stellar Ledger
-```
+![System Architecture](./docs/assets/architecture.svg)
+
+> Full component details and data-flow walkthroughs: [docs/architecture.md](./docs/architecture.md)
 
 ---
 
