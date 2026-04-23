@@ -677,6 +677,113 @@ All events use the topic pattern `("campaign", "<event_type>")`.
 
 ---
 
+## Platform Fee Mechanism
+
+An optional platform fee can be collected on withdrawal by passing a `PlatformConfig` to `initialize`. If no config is provided, the creator receives 100% of the raised funds.
+
+### How Basis Points Work
+
+Fees are expressed in **basis points (bps)**, where `10000 bps = 100%`. This avoids floating-point arithmetic on-chain.
+
+| `fee_bps` | Percentage |
+|-----------|------------|
+| `0` | 0% (no fee) |
+| `50` | 0.5% |
+| `100` | 1% |
+| `250` | 2.5% |
+| `500` | 5% |
+| `1000` | 10% |
+| `10000` | 100% (maximum allowed) |
+
+Any value above `10000` is rejected with `ContractError::InvalidFee` (code 8).
+
+### Fee Deduction on Withdrawal
+
+When `withdraw()` is called after a successful campaign, the contract applies the fee before paying the creator:
+
+```
+fee            = total_raised × fee_bps / 10_000
+creator_payout = total_raised − fee
+```
+
+The fee is transferred to `PlatformConfig.address` first, then the remainder goes to the creator. Both transfers happen atomically in the same transaction.
+
+From the contract source:
+
+```rust
+let payout = if let Some(config) = platform_config {
+    let fee = total * config.fee_bps as i128 / 10_000;
+    token_client.transfer(&env.current_contract_address(), &config.address, &fee);
+    total - fee
+} else {
+    total
+};
+token_client.transfer(&env.current_contract_address(), &creator, &payout);
+```
+
+### Configuration Examples
+
+**No fee (creator keeps everything):**
+
+```rust
+initialize(
+    env, creator, token, goal, deadline, min_contribution,
+    title, description, None,
+    None,  // no platform_config
+    None,
+)?;
+```
+
+**2.5% fee (250 bps):**
+
+```rust
+let platform_config = Some(PlatformConfig {
+    address: platform_address,
+    fee_bps: 250,
+});
+// On a 1000 XLM raise:
+//   fee            = 1_000_000_0000 × 250 / 10_000 = 25 XLM
+//   creator_payout = 975 XLM
+```
+
+**5% fee (500 bps):**
+
+```rust
+let platform_config = Some(PlatformConfig {
+    address: platform_address,
+    fee_bps: 500,
+});
+// On a 1000 XLM raise:
+//   fee            = 50 XLM
+//   creator_payout = 950 XLM
+```
+
+**Explicit zero fee (fee address set, but 0%):**
+
+```rust
+let platform_config = Some(PlatformConfig {
+    address: platform_address,
+    fee_bps: 0,  // 0 bps — no fee deducted, creator receives full amount
+});
+```
+
+> Note: `fee_bps: 0` with a `PlatformConfig` is valid and results in no fee transfer. It is equivalent to passing `None` for `platform_config` in terms of payout, but `get_campaign_info()` will still report `has_platform_config: true`.
+
+### Querying the Fee Configuration
+
+```rust
+// Returns Some(PlatformConfig) if set, None otherwise
+let config: Option<PlatformConfig> = platform_config(env);
+
+// Or via get_campaign_info()
+let info: CampaignInfo = get_campaign_info(env);
+// info.has_platform_config — bool
+// info.platform_fee_bps    — u32 (0 if no config)
+// info.platform_address    — Address (creator address if no config)
+```
+
+---
+
 ## Usage Examples
 
 ### Initialize Campaign
