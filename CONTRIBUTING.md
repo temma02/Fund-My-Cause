@@ -191,6 +191,128 @@ Fund-My-Cause/
 └── .github/                # GitHub workflows and templates
 ```
 
+## Changelog Maintenance
+
+Every user-facing change must be recorded in [CHANGELOG.md](./CHANGELOG.md) before the PR is merged. This keeps the release history readable and makes it easy to generate release notes.
+
+### Format
+
+The changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) conventions. Each entry lives under the `## [Unreleased]` heading until a release is cut, at which point it is moved to a new versioned section.
+
+```markdown
+## [Unreleased]
+
+### Added
+- ...
+
+### Changed
+- ...
+
+## [1.2.0] - 2026-05-01
+
+### Fixed
+- ...
+```
+
+### Semantic Versioning for Contracts
+
+This project follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`) for both the npm packages and the Soroban smart contracts. The contract version is stored in `CONTRACT_VERSION` in `contracts/crowdfund/src/lib.rs`.
+
+| Bump | When to use | Contract examples |
+|------|-------------|-------------------|
+| **MAJOR** (`x.0.0`) | Breaking change — existing callers must update | Removing or renaming a public function, changing a function's parameter types or order, changing storage key layout in a way that breaks existing data |
+| **MINOR** (`0.x.0`) | Backwards-compatible new functionality | Adding a new contract function, adding an optional parameter, new error codes, new events |
+| **PATCH** (`0.0.x`) | Backwards-compatible bug fixes | Fixing incorrect fee calculation, correcting an off-by-one in deadline validation, gas optimisations with no interface change |
+
+> **Smart contract note:** Because deployed Soroban contracts are immutable, a MAJOR bump typically means deploying a new contract instance and migrating state or directing users to the new address. Treat any storage layout change as a breaking change.
+
+### Changelog Categories
+
+Use only the standard Keep a Changelog categories. Pick the one that best describes the change:
+
+| Category | Use for |
+|----------|---------|
+| `Added` | New features, new contract functions, new API endpoints, new UI components |
+| `Changed` | Changes to existing behaviour that are backwards-compatible (e.g. updated defaults, revised copy) |
+| `Deprecated` | Features that still work but will be removed in a future release |
+| `Removed` | Features or functions that have been deleted |
+| `Fixed` | Bug fixes |
+| `Security` | Vulnerability patches or security-hardening changes |
+
+### Writing Good Entries
+
+Each entry should be a single sentence that answers **what changed and why it matters to users or integrators**. Avoid implementation details unless they affect how the feature is used.
+
+**Good entries:**
+
+```markdown
+### Added
+- `accepted_tokens` whitelist parameter to `initialize()`, allowing campaigns
+  to accept multiple Stellar tokens (e.g. XLM and USDC) simultaneously.
+- `contributor_list(offset, limit)` function for paginated contributor queries
+  (page size capped at 50 to prevent excessive memory usage).
+- `pause` / `unpause` admin functions to temporarily halt contributions without
+  cancelling the campaign.
+
+### Changed
+- `contribute()` now requires an explicit `token` argument; callers must pass
+  the token address they are transferring.
+
+### Fixed
+- Platform fee calculation no longer rounds down to zero for contributions
+  below 10,000 stroops.
+
+### Security
+- Added `checked_add` overflow protection to all contribution amount
+  accumulations.
+```
+
+**Avoid vague entries like:**
+
+```markdown
+### Changed
+- Updated some contract logic.
+- Minor fixes.
+```
+
+### When to Update the Changelog
+
+Update `CHANGELOG.md` in the **same commit or PR** as the code change. The PR checklist already includes a documentation step — treat the changelog as part of that.
+
+- **Feature PR:** add an entry under `Added` (or `Changed` / `Deprecated` as appropriate).
+- **Bug-fix PR:** add an entry under `Fixed`.
+- **Security PR:** add an entry under `Security` and consider a coordinated disclosure before merging publicly.
+- **Docs-only PR:** no changelog entry required unless the docs change affects how users integrate with the project.
+- **Chore / tooling PR:** no changelog entry required.
+
+### Cutting a Release
+
+When the team decides to release:
+
+1. Create a release branch: `git checkout -b release/v1.2.0`
+2. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [1.2.0] - YYYY-MM-DD` and add a fresh empty `## [Unreleased]` block above it.
+3. Update the comparison links at the bottom of the file:
+   ```markdown
+   [Unreleased]: https://github.com/Fund-My-Cause/Fund-My-Cause/compare/v1.2.0...HEAD
+   [1.2.0]: https://github.com/Fund-My-Cause/Fund-My-Cause/compare/v1.1.0...v1.2.0
+   ```
+4. Bump `CONTRACT_VERSION` in `contracts/crowdfund/src/lib.rs` if the contract changed.
+5. Open a PR, get it reviewed, merge, then tag: `git tag v1.2.0 && git push --tags`.
+
+### Automation
+
+The following tools can reduce manual changelog work:
+
+- **[git-cliff](https://git-cliff.org/)** — generates a changelog from Conventional Commit messages. Add a `cliff.toml` at the repo root to customise groupings and output format.
+  ```bash
+  # Preview what the next release changelog would look like
+  git cliff --unreleased
+  ```
+- **[release-please](https://github.com/googleapis/release-please)** — GitHub Action that opens a release PR automatically, bumping versions and updating the changelog based on commit history. Add `.github/workflows/release-please.yml` to enable it.
+- **GitHub Releases** — paste the relevant changelog section into the GitHub Release description when tagging so users see it directly on the releases page.
+
+---
+
 ## Questions?
 
 - Check existing [issues](https://github.com/Fund-My-Cause/Fund-My-Cause/issues)
