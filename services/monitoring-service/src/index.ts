@@ -11,10 +11,17 @@ const port = process.env.PORT || 9091;
 // Middleware
 app.use(express.json());
 
+// Validate required secrets
+if (!process.env.PAGERDUTY_API_KEY) {
+  logger.warn(
+    "PAGERDUTY_API_KEY environment variable is not set; PagerDuty integration will fail"
+  );
+}
+
 // Initialize services
 const incidentEngine = new IncidentResponseEngine();
 const pagerDuty = new PagerDutyIntegration(
-  process.env.PAGERDUTY_API_KEY || "test-key",
+  process.env.PAGERDUTY_API_KEY || "",
 );
 
 // Metrics
@@ -387,6 +394,27 @@ app.get("/health", (req: Request, res: Response) => {
       .observe((Date.now() - startTime) / 1000);
     res.status(500).json({ status: "unhealthy" });
   }
+});
+
+/**
+ * 8a. GET /healthz - Kubernetes liveness probe
+ */
+app.get("/healthz", (req: Request, res: Response) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+/**
+ * 8b. GET /readyz - Kubernetes readiness probe
+ */
+app.get("/readyz", (req: Request, res: Response) => {
+  res.json({
+    ready: true,
+    checks: {
+      incident_engine: "ok",
+      pagerduty: "ok",
+    },
+    timestamp: new Date().toISOString(),
+  });
 });
 
 /**

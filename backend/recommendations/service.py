@@ -282,6 +282,20 @@ def health() -> dict:
     return {"status": "ok"}
 
 
+@app.get("/healthz")
+def healthz() -> dict:
+    return {"status": "ok", "timestamp": time.time()}
+
+
+@app.get("/readyz")
+def readyz() -> dict:
+    return {
+        "ready": True,
+        "checks": {"service": "ready"},
+        "timestamp": time.time(),
+    }
+
+
 @app.get("/recommendations")
 def get_recommendations(
     wallet: Optional[str] = Query(None, description="Stellar wallet address for personalisation"),
